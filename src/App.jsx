@@ -10,7 +10,6 @@ import Navigation from './components/Navigation';
 import FloatingAddButton from './components/FloatingAddButton';
 import AddExpenseModal from './components/AddExpenseModal';
 import SettingsModal from './components/SettingsModal';
-import { BudgetProvider } from './context/BudgetContext';
 import './App.css';
 
 function App() {
@@ -42,43 +41,33 @@ function App() {
   };
 
   return (
-    <BudgetProvider>
-      <Router>
-        <div className={`min-h-screen transition-colors duration-300 ${
-          isDarkMode ? 'bg-coffee-dark' : 'bg-cream'
-        }`}>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="pb-20"
-          >
-            <Routes>
-              <Route path="/" element={<Dashboard openSettings={() => setIsSettingsModalOpen(true)} />} />
-              <Route path="/expenses" element={<Expenses />} />
-              <Route path="/budget" element={<Budget />} />
-              <Route path="/savings" element={<Savings />} />
-              <Route path="/reports" element={<Reports />} />
-            </Routes>
-          </motion.div>
-          
-          <Navigation />
-          <FloatingAddButton onClick={() => setIsExpenseModalOpen(true)} />
-          
-          <AddExpenseModal 
-            isOpen={isExpenseModalOpen} 
-            onClose={() => setIsExpenseModalOpen(false)} 
-          />
-
-          <SettingsModal 
-            isOpen={isSettingsModalOpen} 
-            onClose={() => setIsSettingsModalOpen(false)}
-            toggleTheme={toggleTheme}
-            isDarkMode={isDarkMode}
-          />
-        </div>
-      </Router>
-    </BudgetProvider>
+    <Router>
+      <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-coffee-dark' : 'bg-cream'}`}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="pb-20"
+        >
+          <Routes>
+            <Route path="/" element={<Dashboard openSettings={() => setIsSettingsModalOpen(true)} />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/budget" element={<Budget />} />
+            <Route path="/savings" element={<Savings />} />
+            <Route path="/reports" element={<Reports />} />
+          </Routes>
+        </motion.div>
+        <Navigation />
+        <FloatingAddButton onClick={() => setIsExpenseModalOpen(true)} />
+        <AddExpenseModal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} />
+        <SettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          toggleTheme={toggleTheme}
+          isDarkMode={isDarkMode}
+        />
+      </div>
+    </Router>
   );
 }
 

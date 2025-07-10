@@ -7,17 +7,18 @@ import * as FiIcons from 'react-icons/fi';
 const { FiX } = FiIcons;
 
 const AddExpenseModal = ({ isOpen, onClose }) => {
-  const { categories, addExpense, currency } = useBudget();
+  const { categories, addExpense, currency, t, getCategoryName, buyers } = useBudget();
   const [formData, setFormData] = useState({
     amount: '',
     category: '',
     description: '',
+    buyerId: '1', // Valeur par défaut pour "Moi"
     date: new Date().toISOString().split('T')[0]
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.amount || !formData.category) return;
+    if (!formData.amount || !formData.category || !formData.buyerId) return;
 
     addExpense({
       ...formData,
@@ -28,8 +29,10 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
       amount: '',
       category: '',
       description: '',
+      buyerId: '1',
       date: new Date().toISOString().split('T')[0]
     });
+
     onClose();
   };
 
@@ -59,7 +62,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-espresso dark:text-cream">
-                Nouvelle dépense
+                {t('newExpense')}
               </h2>
               <button
                 onClick={onClose}
@@ -72,7 +75,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-espresso dark:text-cream mb-2">
-                  Montant ({currency})
+                  {t('amount')} ({currency})
                 </label>
                 <input
                   type="number"
@@ -89,7 +92,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
 
               <div>
                 <label className="block text-sm font-medium text-espresso dark:text-cream mb-2">
-                  Catégorie
+                  {t('category')}
                 </label>
                 <select
                   name="category"
@@ -98,10 +101,30 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                   required
                   className="w-full px-4 py-3 border border-cappuccino/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
                 >
-                  <option value="">Sélectionner une catégorie</option>
+                  <option value="">{t('selectCategory')}</option>
                   {categories.map(category => (
                     <option key={category.id} value={category.id}>
-                      {category.icon} {category.name}
+                      {category.icon} {getCategoryName(category.id)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Nouveau champ pour sélectionner l'acheteur */}
+              <div>
+                <label className="block text-sm font-medium text-espresso dark:text-cream mb-2">
+                  {t('buyer')}
+                </label>
+                <select
+                  name="buyerId"
+                  value={formData.buyerId}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-cappuccino/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
+                >
+                  {buyers.map(buyer => (
+                    <option key={buyer.id} value={buyer.id}>
+                      {buyer.name}
                     </option>
                   ))}
                 </select>
@@ -109,7 +132,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
 
               <div>
                 <label className="block text-sm font-medium text-espresso dark:text-cream mb-2">
-                  Description
+                  {t('description')}
                 </label>
                 <input
                   type="text"
@@ -117,13 +140,13 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                   value={formData.description}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-cappuccino/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
-                  placeholder="Description de la dépense"
+                  placeholder={t('expenseDescription')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-espresso dark:text-cream mb-2">
-                  Date
+                  {t('date')}
                 </label>
                 <input
                   type="date"
@@ -140,13 +163,13 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                   onClick={onClose}
                   className="flex-1 px-4 py-3 border border-cappuccino/30 text-espresso dark:text-cream rounded-xl hover:bg-cappuccino/10 transition-colors"
                 >
-                  Annuler
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 px-4 py-3 bg-terracotta text-white rounded-xl hover:bg-terracotta/90 transition-colors"
                 >
-                  Ajouter
+                  {t('add')}
                 </button>
               </div>
             </form>

@@ -1,30 +1,31 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useBudget } from '../context/BudgetContext';
 import { format } from 'date-fns';
+import { useBudget } from '../context/BudgetContext';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiSearch, FiTrash2, FiFilter } = FiIcons;
+const { FiFilter, FiTrash2, FiX } = FiIcons;
 
 const Expenses = () => {
-  const { getCurrentMonthExpenses, categories, deleteExpense, currency } = useBudget();
-  const [searchTerm, setSearchTerm] = useState('');
+  const { expenses, deleteExpense, categories, buyers, currency, t } = useBudget();
   const [selectedCategory, setSelectedCategory] = useState('');
-  
-  const expenses = getCurrentMonthExpenses();
-  
-  const filteredExpenses = expenses.filter(expense => {
-    const matchesSearch = expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         categories.find(cat => cat.id === expense.category)?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || expense.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const [selectedBuyer, setSelectedBuyer] = useState('');
 
   const handleDeleteExpense = (id) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette dépense ?')) {
       deleteExpense(id);
     }
+  };
+
+  const filteredExpenses = expenses
+    .filter(expense => !selectedCategory || expense.category === selectedCategory)
+    .filter(expense => !selectedBuyer || expense.buyerId === selectedBuyer)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const resetFilters = () => {
+    setSelectedCategory('');
+    setSelectedBuyer('');
   };
 
   return (
@@ -40,42 +41,54 @@ const Expenses = () => {
             Mes dépenses
           </h1>
           <p className="text-espresso/70 dark:text-cappuccino/70">
-            {format(new Date(), 'MMMM yyyy')}
+            Historique de toutes vos dépenses
           </p>
         </motion.div>
 
-        {/* Search and Filter */}
+        {/* Filters */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="space-y-4 mb-6"
+          className="bg-white dark:bg-espresso/30 rounded-2xl p-4 mb-6 shadow-soft"
         >
-          <div className="relative">
-            <SafeIcon 
-              icon={FiSearch} 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-espresso/50 dark:text-cappuccino/50 w-5 h-5" 
-            />
-            <input
-              type="text"
-              placeholder="Rechercher une dépense..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-espresso/30 border border-cappuccino/30 dark:border-cappuccino/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta/50 text-espresso dark:text-cream"
-            />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <SafeIcon icon={FiFilter} className="w-5 h-5 text-terracotta" />
+              <h2 className="font-medium text-espresso dark:text-cream">Filtres</h2>
+            </div>
+            {(selectedCategory || selectedBuyer) && (
+              <button
+                onClick={resetFilters}
+                className="text-sm text-terracotta hover:underline flex items-center gap-1"
+              >
+                <SafeIcon icon={FiX} className="w-4 h-4" />
+                Réinitialiser
+              </button>
+            )}
           </div>
-
-          <div className="flex items-center gap-2">
-            <SafeIcon icon={FiFilter} className="w-5 h-5 text-espresso/70 dark:text-cappuccino/70" />
+          <div className="grid grid-cols-2 gap-3">
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="flex-1 px-4 py-3 bg-white dark:bg-espresso/30 border border-cappuccino/30 dark:border-cappuccino/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta/50 text-espresso dark:text-cream"
+              className="px-3 py-2 border border-cappuccino/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
             >
               <option value="">Toutes les catégories</option>
               {categories.map(category => (
                 <option key={category.id} value={category.id}>
                   {category.icon} {category.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={selectedBuyer}
+              onChange={(e) => setSelectedBuyer(e.target.value)}
+              className="px-3 py-2 border border-cappuccino/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
+            >
+              <option value="">Tous les acheteurs</option>
+              {buyers.map(buyer => (
+                <option key={buyer.id} value={buyer.id}>
+                  {buyer.name}
                 </option>
               ))}
             </select>
@@ -87,20 +100,24 @@ const Expenses = () => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="space-y-3"
+          className="space-y-4"
         >
+          <div className="flex justify-between items-center">
+            <h2 className="font-medium text-espresso dark:text-cream">
+              {filteredExpenses.length} dépense(s)
+            </h2>
+          </div>
+
           {filteredExpenses.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-espresso/70 dark:text-cappuccino/70 mb-2">
+            <div className="bg-white dark:bg-espresso/30 rounded-2xl p-6 text-center shadow-soft">
+              <p className="text-espresso/70 dark:text-cappuccino/70">
                 Aucune dépense trouvée
-              </p>
-              <p className="text-sm text-espresso/50 dark:text-cappuccino/50">
-                {searchTerm || selectedCategory ? 'Essayez de modifier vos filtres' : 'Ajoutez votre première dépense !'}
               </p>
             </div>
           ) : (
             filteredExpenses.map((expense, index) => {
               const category = categories.find(cat => cat.id === expense.category);
+              const buyer = buyers.find(b => b.id === expense.buyerId);
               return (
                 <motion.div
                   key={expense.id}
@@ -111,8 +128,10 @@ const Expenses = () => {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                           style={{ backgroundColor: `${category?.color}20` }}>
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center"
+                        style={{ backgroundColor: `${category?.color}20` }}
+                      >
                         <span className="text-xl">{category?.icon}</span>
                       </div>
                       <div className="flex-1">
@@ -123,9 +142,11 @@ const Expenses = () => {
                           <span className="text-sm text-espresso/70 dark:text-cappuccino/70">
                             {category?.name}
                           </span>
-                          <span className="text-xs text-espresso/50 dark:text-cappuccino/50">
-                            •
+                          <span className="text-xs text-espresso/50 dark:text-cappuccino/50">•</span>
+                          <span className="text-sm text-espresso/70 dark:text-cappuccino/70">
+                            {buyer?.name}
                           </span>
+                          <span className="text-xs text-espresso/50 dark:text-cappuccino/50">•</span>
                           <span className="text-sm text-espresso/70 dark:text-cappuccino/70">
                             {format(new Date(expense.date), 'dd/MM/yyyy')}
                           </span>
@@ -149,25 +170,6 @@ const Expenses = () => {
             })
           )}
         </motion.div>
-
-        {/* Total */}
-        {filteredExpenses.length > 0 && (
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-6 bg-white dark:bg-espresso/30 rounded-2xl p-4 shadow-soft"
-          >
-            <div className="flex justify-between items-center">
-              <span className="font-medium text-espresso dark:text-cream">
-                Total {selectedCategory ? `(${categories.find(cat => cat.id === selectedCategory)?.name})` : ''}
-              </span>
-              <span className="text-xl font-bold text-terracotta">
-                {filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0).toFixed(2)} {currency}
-              </span>
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );

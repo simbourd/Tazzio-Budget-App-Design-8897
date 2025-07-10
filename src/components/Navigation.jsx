@@ -1,22 +1,25 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useBudget } from '../context/BudgetContext';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
 const { FiHome, FiCreditCard, FiTarget, FiPieChart, FiTrendingUp } = FiIcons;
 
 const Navigation = () => {
+  const { t } = useBudget();
+
   const navItems = [
-    { path: '/', icon: FiHome, label: 'Accueil' },
-    { path: '/expenses', icon: FiCreditCard, label: 'Dépenses' },
-    { path: '/budget', icon: FiTarget, label: 'Budget' },
-    { path: '/savings', icon: FiPieChart, label: 'Épargne' },
-    { path: '/reports', icon: FiTrendingUp, label: 'Rapports' }
+    { path: '/', icon: FiHome, label: t('home') },
+    { path: '/expenses', icon: FiCreditCard, label: t('expenses') },
+    { path: '/budget', icon: FiTarget, label: t('budget') },
+    { path: '/savings', icon: FiPieChart, label: t('savings') },
+    { path: '/reports', icon: FiTrendingUp, label: t('reports') }
   ];
 
   return (
-    <motion.nav 
+    <motion.nav
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
