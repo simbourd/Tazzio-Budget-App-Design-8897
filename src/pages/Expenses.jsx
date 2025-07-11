@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { useBudget } from '../context/BudgetContext';
@@ -8,19 +8,28 @@ import * as FiIcons from 'react-icons/fi';
 const { FiFilter, FiTrash2, FiX } = FiIcons;
 
 const Expenses = () => {
-  const { expenses, deleteExpense, categories, buyers, currency, t } = useBudget();
+  const { expenses, deleteExpense, categories, buyers, currency, t, refreshExpenses } = useBudget();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBuyer, setSelectedBuyer] = useState('');
+  
+  // Rafraîchir les dépenses au chargement de la page
+  useEffect(() => {
+    refreshExpenses();
+  }, []);
 
-  const handleDeleteExpense = (id) => {
+  const handleDeleteExpense = async (id) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette dépense ?')) {
-      deleteExpense(id);
+      const success = await deleteExpense(id);
+      if (success) {
+        // Rafraîchir la liste après la suppression
+        refreshExpenses();
+      }
     }
   };
 
   const filteredExpenses = expenses
     .filter(expense => !selectedCategory || expense.category === selectedCategory)
-    .filter(expense => !selectedBuyer || expense.buyerId === selectedBuyer)
+    .filter(expense => !selectedBuyer || expense.buyer_id === selectedBuyer)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const resetFilters = () => {
@@ -117,7 +126,7 @@ const Expenses = () => {
           ) : (
             filteredExpenses.map((expense, index) => {
               const category = categories.find(cat => cat.id === expense.category);
-              const buyer = buyers.find(b => b.id === expense.buyerId);
+              const buyer = buyers.find(b => b.id === expense.buyer_id);
               return (
                 <motion.div
                   key={expense.id}

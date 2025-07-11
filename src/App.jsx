@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import AuthWrapper from './components/AuthWrapper';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Budget from './pages/Budget';
@@ -42,31 +43,39 @@ function App() {
 
   return (
     <Router>
-      <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-coffee-dark' : 'bg-cream'}`}>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="pb-20"
-        >
-          <Routes>
-            <Route path="/" element={<Dashboard openSettings={() => setIsSettingsModalOpen(true)} />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/budget" element={<Budget />} />
-            <Route path="/savings" element={<Savings />} />
-            <Route path="/reports" element={<Reports />} />
-          </Routes>
-        </motion.div>
-        <Navigation />
-        <FloatingAddButton onClick={() => setIsExpenseModalOpen(true)} />
-        <AddExpenseModal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} />
-        <SettingsModal
-          isOpen={isSettingsModalOpen}
-          onClose={() => setIsSettingsModalOpen(false)}
-          toggleTheme={toggleTheme}
-          isDarkMode={isDarkMode}
-        />
-      </div>
+      <AuthWrapper>
+        <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-coffee-dark' : 'bg-cream'}`}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="pb-20"
+          >
+            <Routes>
+              <Route path="/" element={<Dashboard openSettings={() => setIsSettingsModalOpen(true)} />} />
+              <Route path="/expenses" element={<Expenses />} />
+              <Route path="/budget" element={<Budget />} />
+              <Route path="/savings" element={<Savings />} />
+              <Route path="/reports" element={<Reports />} />
+            </Routes>
+          </motion.div>
+
+          <Navigation />
+          <FloatingAddButton onClick={() => setIsExpenseModalOpen(true)} />
+
+          <AddExpenseModal
+            isOpen={isExpenseModalOpen}
+            onClose={() => setIsExpenseModalOpen(false)}
+          />
+
+          <SettingsModal
+            isOpen={isSettingsModalOpen}
+            onClose={() => setIsSettingsModalOpen(false)}
+            toggleTheme={toggleTheme}
+            isDarkMode={isDarkMode}
+          />
+        </div>
+      </AuthWrapper>
     </Router>
   );
 }

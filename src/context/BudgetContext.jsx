@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr, enUS, es } from 'date-fns/locale';
+import { useAuth } from './AuthContext';
+import supabase from '../lib/supabase';
 
 // Créer le contexte
 const BudgetContext = createContext();
 
-// Export du hook personnalisé
+// Hook personnalisé pour utiliser le contexte
 export const useBudget = () => {
   const context = useContext(BudgetContext);
   if (!context) {
@@ -52,7 +54,8 @@ const translations = {
     manageBuyers: "Gérer les acheteurs",
     confirmDeleteBuyer: "Êtes-vous sûr de vouloir supprimer cet acheteur ?",
     newBuyer: "Nouvel acheteur",
-    addBuyer: "Ajouter"
+    addBuyer: "Ajouter",
+    logout: "Déconnexion"
   },
   en: {
     home: "Home",
@@ -90,7 +93,8 @@ const translations = {
     manageBuyers: "Manage buyers",
     confirmDeleteBuyer: "Are you sure you want to delete this buyer?",
     newBuyer: "New buyer",
-    addBuyer: "Add"
+    addBuyer: "Add",
+    logout: "Logout"
   },
   es: {
     home: "Inicio",
@@ -128,181 +132,324 @@ const translations = {
     manageBuyers: "Gestionar compradores",
     confirmDeleteBuyer: "¿Está seguro que desea eliminar este comprador?",
     newBuyer: "Nuevo comprador",
-    addBuyer: "Añadir"
+    addBuyer: "Añadir",
+    logout: "Cerrar sesión"
   }
 };
 
-const dateLocales = {
-  fr,
-  en: enUS,
-  es
-};
+const dateLocales = { fr, en: enUS, es };
+
+// Default data
+const defaultCategories = [
+  { id: '1', name: 'Alimentation', icon: '🍔', color: '#FF9800' },
+  { id: '2', name: 'Transport', icon: '🚗', color: '#2196F3' },
+  { id: '3', name: 'Logement', icon: '🏠', color: '#4CAF50' },
+  { id: '4', name: 'Loisirs', icon: '🎬', color: '#9C27B0' },
+  { id: '5', name: 'Santé', icon: '💊', color: '#F44336' },
+  { id: '6', name: 'Shopping', icon: '🛍️', color: '#E91E63' },
+  { id: '7', name: 'Factures', icon: '📝', color: '#607D8B' },
+  { id: '8', name: 'Autres', icon: '📦', color: '#795548' }
+];
+
+const defaultBuyers = [
+  { id: '1', name: 'Moi' },
+  { id: '2', name: 'Partenaire' }
+];
 
 // Provider component
 export const BudgetProvider = ({ children }) => {
-  // State pour la langue
-  const [language, setLanguage] = useState(() => {
-    return localStorage.getItem('tazzio-language') || 'fr';
-  });
+  const { user } = useAuth();
 
-  // State pour la devise
-  const [currency, setCurrency] = useState(() => {
-    return localStorage.getItem('tazzio-currency') || '€';
-  });
+  // State pour les données utilisateur
+  const [language, setLanguage] = useState('fr');
+  const [currency, setCurrency] = useState('€');
+  const [income, setIncome] = useState(2000);
+  const [categories, setCategories] = useState(defaultCategories);
+  const [buyers, setBuyers] = useState(defaultBuyers);
+  const [expenses, setExpenses] = useState([]);
+  const [budgets, setBudgets] = useState({});
+  const [savings, setSavings] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // State pour le revenu mensuel
-  const [income, setIncome] = useState(() => {
-    const savedIncome = localStorage.getItem('tazzio-income');
-    return savedIncome ? parseFloat(savedIncome) : 2000;
-  });
-
-  // State pour les catégories
-  const [categories, setCategories] = useState(() => {
-    const savedCategories = localStorage.getItem('tazzio-categories');
-    return savedCategories ? JSON.parse(savedCategories) : [
-      { id: '1', name: 'Alimentation', icon: '🍔', color: '#FF9800' },
-      { id: '2', name: 'Transport', icon: '🚗', color: '#2196F3' },
-      { id: '3', name: 'Logement', icon: '🏠', color: '#4CAF50' },
-      { id: '4', name: 'Loisirs', icon: '🎬', color: '#9C27B0' },
-      { id: '5', name: 'Santé', icon: '💊', color: '#F44336' },
-      { id: '6', name: 'Shopping', icon: '🛍️', color: '#E91E63' },
-      { id: '7', name: 'Factures', icon: '📝', color: '#607D8B' },
-      { id: '8', name: 'Autres', icon: '📦', color: '#795548' }
-    ];
-  });
-
-  // State pour les acheteurs
-  const [buyers, setBuyers] = useState(() => {
-    const savedBuyers = localStorage.getItem('tazzio-buyers');
-    return savedBuyers ? JSON.parse(savedBuyers) : [
-      { id: '1', name: 'Moi' },
-      { id: '2', name: 'Partenaire' }
-    ];
-  });
-
-  // State pour les dépenses
-  const [expenses, setExpenses] = useState(() => {
-    const savedExpenses = localStorage.getItem('tazzio-expenses');
-    return savedExpenses ? JSON.parse(savedExpenses) : [];
-  });
-
-  // State pour les budgets par catégorie
-  const [budgets, setBudgets] = useState(() => {
-    const savedBudgets = localStorage.getItem('tazzio-budgets');
-    return savedBudgets ? JSON.parse(savedBudgets) : {};
-  });
-
-  // State pour les objectifs d'épargne
-  const [savings, setSavings] = useState(() => {
-    const savedSavings = localStorage.getItem('tazzio-savings');
-    return savedSavings ? JSON.parse(savedSavings) : [];
-  });
-
-  // Sauvegarde dans le localStorage lorsque les states changent
+  // Charger les données utilisateur depuis Supabase
   useEffect(() => {
-    localStorage.setItem('tazzio-language', language);
-  }, [language]);
+    if (user) {
+      loadUserData();
+    }
+  }, [user]);
 
-  useEffect(() => {
-    localStorage.setItem('tazzio-currency', currency);
-  }, [currency]);
-
-  useEffect(() => {
-    localStorage.setItem('tazzio-income', income.toString());
-  }, [income]);
-
-  useEffect(() => {
-    localStorage.setItem('tazzio-categories', JSON.stringify(categories));
-  }, [categories]);
-
-  useEffect(() => {
-    localStorage.setItem('tazzio-buyers', JSON.stringify(buyers));
-  }, [buyers]);
-
-  useEffect(() => {
-    localStorage.setItem('tazzio-expenses', JSON.stringify(expenses));
-  }, [expenses]);
-
-  useEffect(() => {
-    localStorage.setItem('tazzio-budgets', JSON.stringify(budgets));
-  }, [budgets]);
-
-  useEffect(() => {
-    localStorage.setItem('tazzio-savings', JSON.stringify(savings));
-  }, [savings]);
-
-  // Fonction pour ajouter une dépense
-  const addExpense = (expense) => {
-    const newExpense = {
-      ...expense,
-      id: Math.random().toString(36).substr(2, 9),
-      date: expense.date || new Date().toISOString().split('T')[0]
-    };
-    setExpenses(prev => [newExpense, ...prev]);
+  // Fonction pour charger les données utilisateur
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      
+      // Vérifier si les paramètres utilisateur existent déjà
+      const { data: settings, error: settingsError } = await supabase
+        .from('user_settings_7k8m3n')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (settingsError && settingsError.code !== 'PGRST116') {
+        console.error('Error loading settings:', settingsError);
+        
+        // Si la table n'existe pas, initialiser avec les valeurs par défaut
+        await initializeUserData();
+      }
+      
+      // Si les paramètres existent, les appliquer
+      if (settings) {
+        setLanguage(settings.language || 'fr');
+        setCurrency(settings.currency || '€');
+        setIncome(settings.income || 2000);
+        setCategories(settings.categories || defaultCategories);
+        setBuyers(settings.buyers || defaultBuyers);
+        setBudgets(settings.budgets || {});
+        setSavings(settings.savings || []);
+      } else {
+        // Sinon, initialiser avec les valeurs par défaut
+        await initializeUserData();
+      }
+      
+      // Charger les dépenses
+      await refreshExpenses();
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Fonction pour supprimer une dépense
-  const deleteExpense = (id) => {
-    setExpenses(prev => prev.filter(expense => expense.id !== id));
+  // Initialiser les données utilisateur
+  const initializeUserData = async () => {
+    if (!user) return;
+    
+    try {
+      // Créer les paramètres par défaut
+      const defaultSettings = {
+        user_id: user.id,
+        language: 'fr',
+        currency: '€',
+        income: 2000,
+        categories: defaultCategories,
+        buyers: defaultBuyers,
+        budgets: {},
+        savings: []
+      };
+
+      const { error: insertError } = await supabase
+        .from('user_settings_7k8m3n')
+        .insert([defaultSettings]);
+        
+      if (insertError) {
+        console.error('Error creating default settings:', insertError);
+      } else {
+        // Appliquer les paramètres par défaut
+        setLanguage('fr');
+        setCurrency('€');
+        setIncome(2000);
+        setCategories(defaultCategories);
+        setBuyers(defaultBuyers);
+        setBudgets({});
+        setSavings([]);
+      }
+    } catch (error) {
+      console.error('Error initializing user data:', error);
+    }
   };
 
-  // Fonction pour mettre à jour un budget
-  const updateBudget = (categoryId, amount) => {
-    setBudgets(prev => ({
-      ...prev,
-      [categoryId]: amount
-    }));
+  // Sauvegarder les paramètres utilisateur
+  const saveUserSettings = async (updates) => {
+    if (!user) return false;
+    
+    try {
+      console.log("Saving user settings:", updates);
+      
+      const { data, error } = await supabase
+        .from('user_settings_7k8m3n')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+        
+      if (error) {
+        console.error('Error saving settings:', error);
+        return false;
+      }
+      
+      console.log("Settings saved successfully");
+      return true;
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      return false;
+    }
   };
 
-  // Fonction pour ajouter un objectif d'épargne
-  const addSavingsGoal = (goal) => {
+  // Rafraîchir les dépenses
+  const refreshExpenses = async () => {
+    if (!user) return;
+    
+    try {
+      console.log('Fetching expenses for user:', user.id);
+      const { data, error } = await supabase
+        .from('user_expenses_7k8m3n')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+        
+      if (error) {
+        console.error('Error fetching expenses:', error);
+        return;
+      }
+      
+      console.log('Fetched expenses:', data);
+      if (data) {
+        setExpenses(data);
+      }
+    } catch (error) {
+      console.error('Error in refreshExpenses:', error);
+    }
+  };
+
+  // Ajouter une dépense
+  const addExpense = async (expense) => {
+    if (!user) return false;
+    
+    try {
+      const newExpense = {
+        user_id: user.id,
+        amount: parseFloat(expense.amount),
+        category: expense.category,
+        description: expense.description || '',
+        buyer_id: expense.buyerId,
+        date: expense.date || new Date().toISOString().split('T')[0]
+      };
+
+      console.log('Adding expense:', newExpense);
+
+      const { data, error } = await supabase
+        .from('user_expenses_7k8m3n')
+        .insert([newExpense])
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('Error inserting expense:', error);
+        return false;
+      }
+
+      console.log('Expense added successfully:', data);
+      await refreshExpenses();
+      return true;
+    } catch (error) {
+      console.error('Error in addExpense:', error);
+      return false;
+    }
+  };
+
+  // Supprimer une dépense
+  const deleteExpense = async (id) => {
+    if (!user) return false;
+    
+    try {
+      const { error } = await supabase
+        .from('user_expenses_7k8m3n')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error deleting expense:', error);
+        return false;
+      }
+
+      setExpenses(prev => prev.filter(expense => expense.id !== id));
+      return true;
+    } catch (error) {
+      console.error('Error in deleteExpense:', error);
+      return false;
+    }
+  };
+
+  // Mettre à jour la langue
+  const updateLanguage = async (newLanguage) => {
+    setLanguage(newLanguage);
+    if (user) {
+      return await saveUserSettings({ language: newLanguage });
+    }
+    return true;
+  };
+
+  // Mettre à jour la devise
+  const updateCurrency = async (newCurrency) => {
+    setCurrency(newCurrency);
+    return await saveUserSettings({ currency: newCurrency });
+  };
+
+  // Mettre à jour les revenus
+  const updateIncome = async (newIncome) => {
+    setIncome(newIncome);
+    return await saveUserSettings({ income: newIncome });
+  };
+
+  // Mettre à jour le budget d'une catégorie
+  const updateBudget = async (categoryId, amount) => {
+    const newBudgets = { ...budgets, [categoryId]: amount };
+    setBudgets(newBudgets);
+    return await saveUserSettings({ budgets: newBudgets });
+  };
+
+  // Ajouter un acheteur
+  const addBuyer = async (name) => {
+    const newBuyer = { id: Math.random().toString(36).substr(2, 9), name };
+    const newBuyers = [...buyers, newBuyer];
+    setBuyers(newBuyers);
+    return await saveUserSettings({ buyers: newBuyers });
+  };
+
+  // Supprimer un acheteur
+  const removeBuyer = async (id) => {
+    const newBuyers = buyers.filter(buyer => buyer.id !== id);
+    setBuyers(newBuyers);
+    return await saveUserSettings({ buyers: newBuyers });
+  };
+
+  // Mettre à jour un acheteur
+  const updateBuyer = async (id, name) => {
+    const newBuyers = buyers.map(buyer => 
+      buyer.id === id ? { ...buyer, name } : buyer
+    );
+    setBuyers(newBuyers);
+    return await saveUserSettings({ buyers: newBuyers });
+  };
+
+  // Ajouter un objectif d'épargne
+  const addSavingsGoal = async (goal) => {
     const newGoal = {
       ...goal,
       id: Math.random().toString(36).substr(2, 9),
       currentAmount: 0,
       createdAt: new Date().toISOString()
     };
-    setSavings(prev => [...prev, newGoal]);
+    const newSavings = [...savings, newGoal];
+    setSavings(newSavings);
+    return await saveUserSettings({ savings: newSavings });
   };
 
-  // Fonction pour mettre à jour un objectif d'épargne
-  const updateSavingsGoal = (goalId, amount) => {
-    setSavings(prev => prev.map(goal => {
+  // Mettre à jour un objectif d'épargne
+  const updateSavingsGoal = async (goalId, amount) => {
+    const newSavings = savings.map(goal => {
       if (goal.id === goalId) {
-        return {
-          ...goal,
-          currentAmount: goal.currentAmount + amount
-        };
+        return { ...goal, currentAmount: goal.currentAmount + amount };
       }
       return goal;
-    }));
+    });
+    setSavings(newSavings);
+    return await saveUserSettings({ savings: newSavings });
   };
 
-  // Fonction pour ajouter un acheteur
-  const addBuyer = (name) => {
-    const newBuyer = {
-      id: Math.random().toString(36).substr(2, 9),
-      name
-    };
-    setBuyers(prev => [...prev, newBuyer]);
-  };
-
-  // Fonction pour supprimer un acheteur
-  const removeBuyer = (id) => {
-    setBuyers(prev => prev.filter(buyer => buyer.id !== id));
-  };
-
-  // Fonction pour mettre à jour un acheteur
-  const updateBuyer = (id, name) => {
-    setBuyers(prev => prev.map(buyer => {
-      if (buyer.id === id) {
-        return { ...buyer, name };
-      }
-      return buyer;
-    }));
-  };
-
-  // Fonction pour obtenir les dépenses du mois en cours
+  // Obtenir les dépenses du mois en cours
   const getCurrentMonthExpenses = () => {
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
@@ -315,12 +462,12 @@ export const BudgetProvider = ({ children }) => {
       .sort((a, b) => new Date(b.date) - new Date(a.date));
   };
 
-  // Fonction pour obtenir le total des dépenses du mois en cours
+  // Obtenir le total des dépenses du mois en cours
   const getTotalExpensesThisMonth = () => {
     return getCurrentMonthExpenses().reduce((total, expense) => total + expense.amount, 0);
   };
 
-  // Fonction pour obtenir les dépenses par catégorie
+  // Obtenir les dépenses par catégorie
   const getExpensesByCategory = () => {
     const expensesByCategory = {};
     getCurrentMonthExpenses().forEach(expense => {
@@ -332,40 +479,40 @@ export const BudgetProvider = ({ children }) => {
     return expensesByCategory;
   };
 
-  // Fonction pour obtenir les dépenses par acheteur
+  // Obtenir les dépenses par acheteur
   const getExpensesByBuyer = () => {
     const expensesByBuyer = {};
     getCurrentMonthExpenses().forEach(expense => {
-      if (!expensesByBuyer[expense.buyerId]) {
-        expensesByBuyer[expense.buyerId] = 0;
+      if (!expensesByBuyer[expense.buyer_id]) {
+        expensesByBuyer[expense.buyer_id] = 0;
       }
-      expensesByBuyer[expense.buyerId] += expense.amount;
+      expensesByBuyer[expense.buyer_id] += expense.amount;
     });
     return expensesByBuyer;
   };
 
-  // Fonction pour formater un montant
+  // Formater un montant
   const formatAmount = (amount) => {
     return `${amount.toFixed(2)} ${currency}`;
   };
 
-  // Fonction pour formater une date
+  // Formater une date
   const formatDate = (date) => {
     return format(new Date(date), 'EEEE d MMMM yyyy', { locale: dateLocales[language] });
   };
 
-  // Fonction pour formater une date court
+  // Formater une date courte
   const formatShortDate = (date) => {
     return format(new Date(date), 'dd/MM/yyyy');
   };
 
-  // Fonction pour obtenir le nom d'une catégorie
+  // Obtenir le nom d'une catégorie
   const getCategoryName = (categoryId) => {
     const category = categories.find(cat => cat.id === categoryId);
     return category ? category.name : '';
   };
 
-  // Fonction de traduction
+  // Traduire une clé
   const t = (key) => {
     return translations[language][key] || key;
   };
@@ -374,11 +521,11 @@ export const BudgetProvider = ({ children }) => {
     <BudgetContext.Provider
       value={{
         language,
-        setLanguage,
+        setLanguage: updateLanguage,
         currency,
-        setCurrency,
+        setCurrency: updateCurrency,
         income,
-        setIncome,
+        setIncome: updateIncome,
         categories,
         setCategories,
         buyers,
@@ -386,6 +533,7 @@ export const BudgetProvider = ({ children }) => {
         expenses,
         addExpense,
         deleteExpense,
+        refreshExpenses,
         budgets,
         updateBudget,
         savings,
@@ -402,7 +550,8 @@ export const BudgetProvider = ({ children }) => {
         t,
         addBuyer,
         removeBuyer,
-        updateBuyer
+        updateBuyer,
+        loading
       }}
     >
       {children}

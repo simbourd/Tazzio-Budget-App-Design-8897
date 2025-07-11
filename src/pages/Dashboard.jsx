@@ -1,27 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useBudget } from '../context/BudgetContext';
+import { useAuth } from '../context/AuthContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiSettings, FiCoffee, FiTrendingUp, FiTrendingDown, FiDollarSign } = FiIcons;
+const { FiSettings, FiCoffee, FiTrendingUp, FiTrendingDown, FiDollarSign, FiLogOut } = FiIcons;
 
 const Dashboard = ({ openSettings }) => {
-  const {
-    income,
-    getTotalExpensesThisMonth,
-    getExpensesByCategory,
-    categories,
-    getCurrentMonthExpenses,
-    formatAmount,
-    formatDate,
-    formatShortDate,
-    currency,
-    t,
-    getCategoryName
+  const { signOut } = useAuth();
+  const { 
+    income, 
+    getTotalExpensesThisMonth, 
+    getExpensesByCategory, 
+    categories, 
+    getCurrentMonthExpenses, 
+    formatAmount, 
+    formatDate, 
+    formatShortDate, 
+    currency, 
+    t, 
+    getCategoryName,
+    refreshExpenses
   } = useBudget();
 
+  // Rafraîchir les dépenses au chargement du dashboard
+  useEffect(() => {
+    refreshExpenses();
+  }, []);
+  
   const totalExpenses = getTotalExpensesThisMonth();
   const remainingBudget = income - totalExpenses;
   const expensesByCategory = getExpensesByCategory();
@@ -37,6 +45,12 @@ const Dashboard = ({ openSettings }) => {
 
   const recentExpenses = currentMonthExpenses.slice(0, 5);
   const progressPercentage = Math.min((totalExpenses / income) * 100, 100);
+
+  const handleLogout = async () => {
+    if (window.confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+      await signOut();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-cream dark:bg-coffee-dark p-4">
@@ -56,12 +70,20 @@ const Dashboard = ({ openSettings }) => {
               </p>
             </div>
           </div>
-          <button
-            onClick={openSettings}
-            className="p-2 rounded-full bg-cappuccino/20 dark:bg-espresso/50 hover:bg-cappuccino/30 dark:hover:bg-espresso/70 transition-colors"
-          >
-            <SafeIcon icon={FiSettings} className="w-5 h-5 text-espresso dark:text-cream" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={openSettings}
+              className="p-2 rounded-full bg-cappuccino/20 dark:bg-espresso/50 hover:bg-cappuccino/30 dark:hover:bg-espresso/70 transition-colors"
+            >
+              <SafeIcon icon={FiSettings} className="w-5 h-5 text-espresso dark:text-cream" />
+            </button>
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-full bg-terracotta/20 dark:bg-terracotta/30 hover:bg-terracotta/30 dark:hover:bg-terracotta/40 transition-colors"
+            >
+              <SafeIcon icon={FiLogOut} className="w-5 h-5 text-terracotta" />
+            </button>
+          </div>
         </motion.div>
 
         {/* Budget Overview */}
