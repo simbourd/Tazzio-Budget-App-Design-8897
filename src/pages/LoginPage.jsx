@@ -18,7 +18,6 @@ const LoginPage = () => {
     confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
-
   const { signIn, signUp, resetPassword } = useAuth();
   const { language, setLanguage, t } = useBudget();
 
@@ -38,27 +37,29 @@ const LoginPage = () => {
 
   const validateForm = () => {
     const newErrors = {};
+    
     if (!formData.email) {
       newErrors.email = t('emailRequired') || 'Email requis';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = t('invalidEmail') || 'Email invalide';
     }
-
+    
     if (!formData.password) {
       newErrors.password = t('passwordRequired') || 'Mot de passe requis';
     } else if (formData.password.length < 6) {
       newErrors.password = t('passwordTooShort') || 'Mot de passe trop court (min. 6 caractères)';
     }
-
+    
     if (!isLogin) {
       if (!formData.fullName) {
         newErrors.fullName = t('fullNameRequired') || 'Nom complet requis';
       }
+      
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = t('passwordsDoNotMatch') || 'Les mots de passe ne correspondent pas';
       }
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -68,12 +69,14 @@ const LoginPage = () => {
     if (!validateForm()) return;
     
     setLoading(true);
+    setErrors({});
+
     try {
       if (isLogin) {
         const { error } = await signIn(formData.email, formData.password);
         if (error) throw error;
       } else {
-        console.log("Attempting signup with:", formData.email, formData.password);
+        console.log("Attempting signup with:", formData.email, formData.password, formData.fullName);
         const { error } = await signUp(formData.email, formData.password, formData.fullName);
         if (error) throw error;
         
@@ -84,7 +87,15 @@ const LoginPage = () => {
       }
     } catch (error) {
       console.error("Auth error:", error);
-      setErrors({ submit: error.message });
+      
+      if (error.message.includes("User already registered")) {
+        setErrors({email: "Cet email est déjà utilisé"});
+      } else if (error.message.includes("Database error")) {
+        // Handle database error specifically
+        setErrors({submit: "Erreur de base de données lors de la création du compte. Veuillez réessayer."});
+      } else {
+        setErrors({submit: error.message});
+      }
     } finally {
       setLoading(false);
     }
@@ -92,7 +103,7 @@ const LoginPage = () => {
 
   const handleForgotPassword = async () => {
     if (!formData.email) {
-      setErrors({ email: t('enterEmail') || 'Veuillez entrer votre email' });
+      setErrors({email: t('enterEmail') || 'Veuillez entrer votre email'});
       return;
     }
     
@@ -101,7 +112,7 @@ const LoginPage = () => {
       if (error) throw error;
       alert(t('resetEmailSent') || 'Email de réinitialisation envoyé !');
     } catch (error) {
-      setErrors({ submit: error.message });
+      setErrors({submit: error.message});
     }
   };
 
@@ -209,7 +220,7 @@ const LoginPage = () => {
                 )}
               </div>
             )}
-
+            
             <div>
               <label className="block text-sm font-medium text-espresso dark:text-cream mb-2">
                 {t('email') || 'Email'}

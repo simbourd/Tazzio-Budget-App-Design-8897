@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -38,17 +39,21 @@ export const AuthProvider = ({ children }) => {
 
   const signUp = async (email, password, fullName) => {
     try {
+      // First, create user in auth system
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            full_name: fullName
-          }
+          data: { full_name: fullName }
         }
       });
-
+      
       if (error) throw error;
+
+      // After successful signup, we need to initialize user settings
+      // This should happen automatically when they first sign in
+      // through the loadUserData function in BudgetContext
+      
       return { data, error: null };
     } catch (err) {
       console.error("Signup error:", err);
@@ -62,7 +67,6 @@ export const AuthProvider = ({ children }) => {
         email,
         password
       });
-
       if (error) throw error;
       return { data, error: null };
     } catch (err) {
@@ -87,7 +91,6 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
       });
-
       if (error) throw error;
       return { data, error: null };
     } catch (err) {
@@ -98,10 +101,14 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (updates) => {
     try {
+      if (!session) {
+        throw new Error("Vous devez être connecté pour effectuer cette action");
+      }
+
       const { data, error } = await supabase.auth.updateUser({
         email: updates.email
       });
-
+      
       if (error) throw error;
       return { data, error: null };
     } catch (err) {
@@ -110,8 +117,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const updatePassword = async (newPassword) => {
+  const updatePassword = async (currentPassword, newPassword) => {
     try {
+      if (!session) {
+        throw new Error("Session expirée. Veuillez vous reconnecter.");
+      }
+
+      // Cette méthode utilise le nouveau mot de passe directement
       const { data, error } = await supabase.auth.updateUser({
         password: newPassword
       });

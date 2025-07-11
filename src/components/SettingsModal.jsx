@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiX, FiSettings, FiSun, FiMoon, FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiTrash2, FiPlus, FiSave, FiLogOut } = FiIcons;
+const { FiX, FiSettings, FiSun, FiMoon, FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiTrash2, FiPlus, FiSave, FiLogOut, FiDollarSign } = FiIcons;
 
 // Composant pour la section profil
 const ProfileSection = ({ t }) => {
@@ -33,7 +33,8 @@ const ProfileSection = ({ t }) => {
       setStatusMessage({ type: 'success', text: 'Email mis à jour avec succès' });
       setIsEditingEmail(false);
     } catch (error) {
-      setStatusMessage({ type: 'error', text: error.message });
+      console.error("Error updating email:", error);
+      setStatusMessage({ type: 'error', text: error.message || "Erreur lors de la mise à jour de l'email" });
     }
     setTimeout(() => setStatusMessage(null), 3000);
   };
@@ -44,12 +45,10 @@ const ProfileSection = ({ t }) => {
       setStatusMessage({ type: 'error', text: 'Veuillez remplir tous les champs' });
       return;
     }
-
     if (newPassword !== confirmPassword) {
       setStatusMessage({ type: 'error', text: 'Les mots de passe ne correspondent pas' });
       return;
     }
-
     if (newPassword.length < 6) {
       setStatusMessage({ type: 'error', text: 'Le mot de passe doit contenir au moins 6 caractères' });
       return;
@@ -57,7 +56,8 @@ const ProfileSection = ({ t }) => {
 
     setStatusMessage({ type: 'loading', text: 'Mise à jour...' });
     try {
-      const { error } = await updatePassword(newPassword);
+      // Utiliser le mot de passe actuel pour la vérification
+      const { error } = await updatePassword(currentPassword, newPassword);
       if (error) throw error;
       setCurrentPassword('');
       setNewPassword('');
@@ -65,9 +65,14 @@ const ProfileSection = ({ t }) => {
       setStatusMessage({ type: 'success', text: 'Mot de passe mis à jour avec succès' });
       setIsEditingPassword(false);
     } catch (error) {
-      setStatusMessage({ type: 'error', text: error.message });
+      console.error("Error updating password:", error);
+      if (error.message.includes("session")) {
+        setStatusMessage({ type: 'error', text: 'Session expirée, veuillez vous reconnecter' });
+      } else {
+        setStatusMessage({ type: 'error', text: error.message || "Erreur lors de la mise à jour du mot de passe" });
+      }
     }
-    setTimeout(() => setStatusMessage(null), 3000);
+    setTimeout(() => setStatusMessage(null), 5000);
   };
 
   return (
@@ -258,13 +263,17 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
     buyers, 
     addBuyer, 
     removeBuyer, 
-    updateBuyer 
+    updateBuyer,
+    buyerIncomes,
+    updateBuyerIncome
   } = useBudget();
   const { signOut } = useAuth();
 
   const [newBuyerName, setNewBuyerName] = useState('');
   const [editingBuyer, setEditingBuyer] = useState(null);
   const [editingBuyerName, setEditingBuyerName] = useState('');
+  const [editingIncome, setEditingIncome] = useState(null);
+  const [editingIncomeValue, setEditingIncomeValue] = useState('');
 
   const currencies = [
     { code: 'EUR', symbol: '€', name: 'Euro' },
@@ -283,17 +292,22 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
   const handleAddBuyer = async (e) => {
     e.preventDefault();
     if (!newBuyerName.trim()) return;
-    
     await addBuyer(newBuyerName.trim());
     setNewBuyerName('');
   };
 
   const handleUpdateBuyer = async (id) => {
     if (!editingBuyerName.trim()) return;
-    
     await updateBuyer(id, editingBuyerName.trim());
     setEditingBuyer(null);
     setEditingBuyerName('');
+  };
+
+  const handleUpdateBuyerIncome = async (id) => {
+    if (!editingIncomeValue.trim()) return;
+    await updateBuyerIncome(id, editingIncomeValue.trim());
+    setEditingIncome(null);
+    setEditingIncomeValue('');
   };
 
   const handleDeleteBuyer = async (id) => {
@@ -301,7 +315,6 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
       alert('Vous devez avoir au moins un acheteur');
       return;
     }
-    
     if (window.confirm(t('confirmDeleteBuyer'))) {
       await removeBuyer(id);
     }
@@ -355,7 +368,10 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
               {/* Section Thème */}
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <SafeIcon icon={isDarkMode ? FiMoon : FiSun} className="w-6 h-6 text-terracotta" />
+                  <SafeIcon
+                    icon={isDarkMode ? FiMoon : FiSun}
+                    className="w-6 h-6 text-terracotta"
+                  />
                   <h3 className="text-lg font-medium text-espresso dark:text-cream">
                     {t('theme')}
                   </h3>
@@ -433,12 +449,12 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
                 </div>
               </div>
 
-              {/* Section Acheteurs */}
+              {/* Section Acheteurs et leurs revenus */}
               <div className="space-y-3">
                 <h3 className="text-lg font-medium text-espresso dark:text-cream">
                   {t('manageBuyers')}
                 </h3>
-                
+
                 {/* Ajouter un acheteur */}
                 <form onSubmit={handleAddBuyer} className="flex gap-2">
                   <input
@@ -456,54 +472,115 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
                   </button>
                 </form>
 
-                {/* Liste des acheteurs */}
+                {/* Titre pour les revenus */}
+                <div className="mt-4 mb-2">
+                  <h4 className="font-medium text-espresso dark:text-cream">
+                    {t('buyerIncomes')}
+                  </h4>
+                </div>
+
+                {/* Liste des acheteurs avec leurs revenus */}
                 <div className="space-y-2">
                   {buyers.map(buyer => (
-                    <div key={buyer.id} className="flex items-center gap-2 p-4 bg-cappuccino/10 dark:bg-espresso/20 rounded-lg">
-                      {editingBuyer === buyer.id ? (
-                        <>
-                          <input
-                            type="text"
-                            value={editingBuyerName}
-                            onChange={(e) => setEditingBuyerName(e.target.value)}
-                            className="flex-1 px-3 py-2 border border-cappuccino/30 rounded focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
-                          />
-                          <button
-                            onClick={() => handleUpdateBuyer(buyer.id)}
-                            className="p-2 text-sage hover:bg-sage/10 rounded"
-                          >
-                            <SafeIcon icon={FiSave} className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingBuyer(null);
-                              setEditingBuyerName('');
-                            }}
-                            className="p-2 text-terracotta hover:bg-terracotta/10 rounded"
-                          >
-                            <SafeIcon icon={FiX} className="w-5 h-5" />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <span className="flex-1 text-espresso dark:text-cream">{buyer.name}</span>
-                          <button
-                            onClick={() => {
-                              setEditingBuyer(buyer.id);
-                              setEditingBuyerName(buyer.name);
-                            }}
-                            className="p-2 text-terracotta hover:bg-terracotta/10 rounded"
-                          >
-                            <SafeIcon icon={FiSettings} className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteBuyer(buyer.id)}
-                            className="p-2 text-red-500 hover:bg-red-500/10 rounded"
-                          >
-                            <SafeIcon icon={FiTrash2} className="w-5 h-5" />
-                          </button>
-                        </>
-                      )}
+                    <div key={buyer.id} className="bg-cappuccino/10 dark:bg-espresso/20 rounded-lg">
+                      {/* Nom de l'acheteur */}
+                      <div className="flex items-center gap-2 p-4 border-b border-cappuccino/20 dark:border-espresso/50">
+                        {editingBuyer === buyer.id ? (
+                          <>
+                            <input
+                              type="text"
+                              value={editingBuyerName}
+                              onChange={(e) => setEditingBuyerName(e.target.value)}
+                              className="flex-1 px-3 py-2 border border-cappuccino/30 rounded focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
+                            />
+                            <button
+                              onClick={() => handleUpdateBuyer(buyer.id)}
+                              className="p-2 text-sage hover:bg-sage/10 rounded"
+                            >
+                              <SafeIcon icon={FiSave} className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingBuyer(null);
+                                setEditingBuyerName('');
+                              }}
+                              className="p-2 text-terracotta hover:bg-terracotta/10 rounded"
+                            >
+                              <SafeIcon icon={FiX} className="w-5 h-5" />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="flex-1 text-espresso dark:text-cream font-medium">
+                              {buyer.name}
+                            </span>
+                            <button
+                              onClick={() => {
+                                setEditingBuyer(buyer.id);
+                                setEditingBuyerName(buyer.name);
+                              }}
+                              className="p-2 text-terracotta hover:bg-terracotta/10 rounded"
+                            >
+                              <SafeIcon icon={FiSettings} className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBuyer(buyer.id)}
+                              className="p-2 text-red-500 hover:bg-red-500/10 rounded"
+                            >
+                              <SafeIcon icon={FiTrash2} className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Revenu de l'acheteur */}
+                      <div className="flex items-center gap-2 p-4">
+                        <SafeIcon icon={FiDollarSign} className="w-5 h-5 text-sage" />
+                        
+                        {editingIncome === buyer.id ? (
+                          <>
+                            <input
+                              type="number"
+                              value={editingIncomeValue}
+                              onChange={(e) => setEditingIncomeValue(e.target.value)}
+                              className="flex-1 px-3 py-2 border border-cappuccino/30 rounded focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
+                              placeholder={`${t('buyerIncome')} (${currency})`}
+                              step="0.01"
+                              min="0"
+                            />
+                            <button
+                              onClick={() => handleUpdateBuyerIncome(buyer.id)}
+                              className="p-2 text-sage hover:bg-sage/10 rounded"
+                            >
+                              <SafeIcon icon={FiSave} className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingIncome(null);
+                                setEditingIncomeValue('');
+                              }}
+                              className="p-2 text-terracotta hover:bg-terracotta/10 rounded"
+                            >
+                              <SafeIcon icon={FiX} className="w-5 h-5" />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="flex-1 text-espresso dark:text-cream">
+                              {t('buyerIncome')}: {(buyerIncomes[buyer.id] || 0).toFixed(2)} {currency}
+                            </span>
+                            <button
+                              onClick={() => {
+                                setEditingIncome(buyer.id);
+                                setEditingIncomeValue((buyerIncomes[buyer.id] || 0).toString());
+                              }}
+                              className="p-2 text-terracotta hover:bg-terracotta/10 rounded"
+                            >
+                              <SafeIcon icon={FiSettings} className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

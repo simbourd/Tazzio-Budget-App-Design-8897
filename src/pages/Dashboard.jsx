@@ -6,15 +6,18 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiSettings, FiCoffee, FiTrendingUp, FiTrendingDown, FiDollarSign, FiLogOut } = FiIcons;
+const { FiSettings, FiCoffee, FiTrendingUp, FiTrendingDown, FiDollarSign, FiLogOut, FiUsers } = FiIcons;
 
 const Dashboard = ({ openSettings }) => {
   const { signOut } = useAuth();
   const {
     income,
+    buyerIncomes,
     getTotalExpensesThisMonth,
     getExpensesByCategory,
+    getExpensesByBuyer,
     categories,
+    buyers,
     getCurrentMonthExpenses,
     formatAmount,
     formatDate,
@@ -33,6 +36,7 @@ const Dashboard = ({ openSettings }) => {
   const totalExpenses = getTotalExpensesThisMonth();
   const remainingBudget = income - totalExpenses;
   const expensesByCategory = getExpensesByCategory();
+  const expensesByBuyer = getExpensesByBuyer();
   const currentMonthExpenses = getCurrentMonthExpenses();
 
   const pieData = categories
@@ -43,8 +47,16 @@ const Dashboard = ({ openSettings }) => {
       color: cat.color
     }));
 
-  const recentExpenses = currentMonthExpenses.slice(0, 5);
+  // Données pour le graphique de répartition par acheteur
+  const buyerData = buyers
+    .filter(buyer => expensesByBuyer[buyer.id] > 0)
+    .map(buyer => ({
+      name: buyer.name,
+      expenses: expensesByBuyer[buyer.id] || 0,
+      income: buyerIncomes[buyer.id] || 0
+    }));
 
+  const recentExpenses = currentMonthExpenses.slice(0, 5);
   const progressPercentage = Math.min((totalExpenses / income) * 100, 100);
 
   const handleLogout = async () => {
@@ -87,7 +99,6 @@ const Dashboard = ({ openSettings }) => {
           </div>
         </motion.div>
 
-        {/* Rest of the component remains unchanged */}
         {/* Budget Overview */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -113,6 +124,7 @@ const Dashboard = ({ openSettings }) => {
                 {remainingBudget.toFixed(2)} {currency}
               </span>
             </div>
+            
             {/* Progress bar */}
             <div className="mt-4">
               <div className="flex justify-between text-sm text-espresso/70 dark:text-cappuccino/70 mb-2">
@@ -120,14 +132,68 @@ const Dashboard = ({ openSettings }) => {
                 <span>{progressPercentage.toFixed(1)}%</span>
               </div>
               <div className="w-full bg-cappuccino/20 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all duration-300 ${progressPercentage > 90 ? 'bg-terracotta' : 'bg-sage'}`}
+                <div 
+                  className={`h-2 rounded-full transition-all duration-300 ${progressPercentage > 90 ? 'bg-terracotta' : 'bg-sage'}`} 
                   style={{ width: `${Math.min(progressPercentage, 100)}%` }}
                 />
               </div>
             </div>
           </div>
         </motion.div>
+
+        {/* Income by Person */}
+        {buyers.length > 1 && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white dark:bg-espresso/30 rounded-2xl p-6 mb-6 shadow-soft"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <SafeIcon icon={FiUsers} className="w-5 h-5 text-sage" />
+              <h2 className="text-lg font-semibold text-espresso dark:text-cream">
+                {t('buyerIncomes')}
+              </h2>
+            </div>
+            
+            <div className="space-y-3">
+              {buyers.map(buyer => {
+                const buyerIncome = buyerIncomes[buyer.id] || 0;
+                const buyerExpenses = expensesByBuyer[buyer.id] || 0;
+                const buyerBalance = buyerIncome - buyerExpenses;
+                const incomePercentage = income > 0 ? (buyerIncome / income) * 100 : 0;
+                
+                return (
+                  <div key={buyer.id} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-espresso dark:text-cream font-medium">{buyer.name}</span>
+                      <div className="text-right">
+                        <div className="font-semibold text-sage">{buyerIncome.toFixed(2)} {currency}</div>
+                        <div className="text-xs text-espresso/60 dark:text-cappuccino/60">
+                          {incomePercentage.toFixed(1)}% du total
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-espresso/70 dark:text-cappuccino/70">Dépensé: {buyerExpenses.toFixed(2)} {currency}</span>
+                      <span className={`font-medium ${buyerBalance >= 0 ? 'text-sage' : 'text-terracotta'}`}>
+                        Solde: {buyerBalance.toFixed(2)} {currency}
+                      </span>
+                    </div>
+                    
+                    <div className="w-full bg-cappuccino/20 rounded-full h-1.5 mt-1">
+                      <div 
+                        className="h-1.5 bg-sage rounded-full" 
+                        style={{ width: `${incomePercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
 
         {/* Expense Chart */}
         {pieData.length > 0 && (
@@ -189,6 +255,8 @@ const Dashboard = ({ openSettings }) => {
             <div className="space-y-3">
               {recentExpenses.map((expense, index) => {
                 const category = categories.find(cat => cat.id === expense.category);
+                const buyer = buyers.find(b => b.id === expense.buyer_id);
+                
                 return (
                   <div key={expense.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -197,9 +265,19 @@ const Dashboard = ({ openSettings }) => {
                         <p className="font-medium text-espresso dark:text-cream">
                           {expense.description || getCategoryName(category?.id)}
                         </p>
-                        <p className="text-xs text-espresso/70 dark:text-cappuccino/70">
-                          {formatShortDate(expense.date)}
-                        </p>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="text-espresso/70 dark:text-cappuccino/70">
+                            {formatShortDate(expense.date)}
+                          </span>
+                          {buyer && (
+                            <>
+                              <span className="text-espresso/50 dark:text-cappuccino/50">•</span>
+                              <span className="text-espresso/70 dark:text-cappuccino/70">
+                                {buyer.name}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <span className="font-semibold text-terracotta">

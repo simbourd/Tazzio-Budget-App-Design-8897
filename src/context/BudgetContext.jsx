@@ -56,6 +56,11 @@ const translations = {
     newBuyer: "Nouvel acheteur",
     addBuyer: "Ajouter",
     logout: "Déconnexion",
+    // Nouvelles traductions pour les revenus individuels
+    buyerIncomes: "Revenus par personne",
+    totalIncome: "Revenu total",
+    buyerIncome: "Revenu",
+    updateIncome: "Mettre à jour",
     // Login page translations
     login: "Se connecter",
     signup: "S'inscrire",
@@ -116,6 +121,11 @@ const translations = {
     newBuyer: "New buyer",
     addBuyer: "Add",
     logout: "Logout",
+    // New translations for individual incomes
+    buyerIncomes: "Income by person",
+    totalIncome: "Total income",
+    buyerIncome: "Income",
+    updateIncome: "Update",
     // Login page translations
     login: "Log in",
     signup: "Sign up",
@@ -176,6 +186,11 @@ const translations = {
     newBuyer: "Nuevo comprador",
     addBuyer: "Añadir",
     logout: "Cerrar sesión",
+    // Nuevas traducciones para los ingresos individuales
+    buyerIncomes: "Ingresos por persona",
+    totalIncome: "Ingreso total",
+    buyerIncome: "Ingreso",
+    updateIncome: "Actualizar",
     // Login page translations
     login: "Iniciar sesión",
     signup: "Registrarse",
@@ -223,6 +238,12 @@ const defaultBuyers = [
   { id: '2', name: 'Partenaire' }
 ];
 
+// Revenus par défaut pour les acheteurs
+const defaultBuyerIncomes = {
+  '1': 1200, // Revenu par défaut pour "Moi"
+  '2': 800   // Revenu par défaut pour "Partenaire"
+};
+
 // Provider component
 export const BudgetProvider = ({ children }) => {
   const { user } = useAuth();
@@ -231,6 +252,7 @@ export const BudgetProvider = ({ children }) => {
   const [language, setLanguage] = useState('fr');
   const [currency, setCurrency] = useState('€');
   const [income, setIncome] = useState(2000);
+  const [buyerIncomes, setBuyerIncomes] = useState(defaultBuyerIncomes);
   const [categories, setCategories] = useState(defaultCategories);
   const [buyers, setBuyers] = useState(defaultBuyers);
   const [expenses, setExpenses] = useState([]);
@@ -268,6 +290,7 @@ export const BudgetProvider = ({ children }) => {
         setLanguage(settings.language || 'fr');
         setCurrency(settings.currency || '€');
         setIncome(settings.income || 2000);
+        setBuyerIncomes(settings.buyer_incomes || defaultBuyerIncomes);
         setCategories(settings.categories || defaultCategories);
         setBuyers(settings.buyers || defaultBuyers);
         setBudgets(settings.budgets || {});
@@ -297,6 +320,7 @@ export const BudgetProvider = ({ children }) => {
         language: 'fr',
         currency: '€',
         income: 2000,
+        buyer_incomes: defaultBuyerIncomes,
         categories: defaultCategories,
         buyers: defaultBuyers,
         budgets: {},
@@ -314,6 +338,7 @@ export const BudgetProvider = ({ children }) => {
         setLanguage('fr');
         setCurrency('€');
         setIncome(2000);
+        setBuyerIncomes(defaultBuyerIncomes);
         setCategories(defaultCategories);
         setBuyers(defaultBuyers);
         setBudgets({});
@@ -453,6 +478,21 @@ export const BudgetProvider = ({ children }) => {
     return await saveUserSettings({ income: newIncome });
   };
 
+  // Mettre à jour le revenu d'un acheteur spécifique
+  const updateBuyerIncome = async (buyerId, newIncome) => {
+    const newBuyerIncomes = { ...buyerIncomes, [buyerId]: parseFloat(newIncome) };
+    setBuyerIncomes(newBuyerIncomes);
+    
+    // Calculer le nouveau revenu total
+    const totalIncome = Object.values(newBuyerIncomes).reduce((sum, income) => sum + income, 0);
+    setIncome(totalIncome);
+    
+    return await saveUserSettings({ 
+      buyer_incomes: newBuyerIncomes,
+      income: totalIncome 
+    });
+  };
+
   // Mettre à jour le budget d'une catégorie
   const updateBudget = async (categoryId, amount) => {
     const newBudgets = { ...budgets, [categoryId]: amount };
@@ -462,20 +502,42 @@ export const BudgetProvider = ({ children }) => {
 
   // Ajouter un acheteur
   const addBuyer = async (name) => {
-    const newBuyer = {
-      id: Math.random().toString(36).substr(2, 9),
-      name
-    };
+    const newBuyerId = Math.random().toString(36).substr(2, 9);
+    const newBuyer = { id: newBuyerId, name };
     const newBuyers = [...buyers, newBuyer];
+    
+    // Ajouter un revenu par défaut pour le nouvel acheteur
+    const newBuyerIncomes = { ...buyerIncomes, [newBuyerId]: 0 };
+    
     setBuyers(newBuyers);
-    return await saveUserSettings({ buyers: newBuyers });
+    setBuyerIncomes(newBuyerIncomes);
+    
+    return await saveUserSettings({ 
+      buyers: newBuyers,
+      buyer_incomes: newBuyerIncomes
+    });
   };
 
   // Supprimer un acheteur
   const removeBuyer = async (id) => {
     const newBuyers = buyers.filter(buyer => buyer.id !== id);
+    
+    // Supprimer le revenu de l'acheteur
+    const newBuyerIncomes = { ...buyerIncomes };
+    delete newBuyerIncomes[id];
+    
+    // Recalculer le revenu total
+    const totalIncome = Object.values(newBuyerIncomes).reduce((sum, income) => sum + income, 0);
+    
     setBuyers(newBuyers);
-    return await saveUserSettings({ buyers: newBuyers });
+    setBuyerIncomes(newBuyerIncomes);
+    setIncome(totalIncome);
+    
+    return await saveUserSettings({ 
+      buyers: newBuyers,
+      buyer_incomes: newBuyerIncomes,
+      income: totalIncome
+    });
   };
 
   // Mettre à jour un acheteur
@@ -595,6 +657,8 @@ export const BudgetProvider = ({ children }) => {
       setCurrency: updateCurrency,
       income,
       setIncome: updateIncome,
+      buyerIncomes,
+      updateBuyerIncome,
       categories,
       setCategories,
       buyers,
@@ -622,8 +686,7 @@ export const BudgetProvider = ({ children }) => {
       removeBuyer,
       updateBuyer,
       loading
-    }}
-    >
+    }}>
       {children}
     </BudgetContext.Provider>
   );
