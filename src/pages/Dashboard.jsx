@@ -10,17 +10,17 @@ const { FiSettings, FiCoffee, FiTrendingUp, FiTrendingDown, FiDollarSign, FiLogO
 
 const Dashboard = ({ openSettings }) => {
   const { signOut } = useAuth();
-  const { 
-    income, 
-    getTotalExpensesThisMonth, 
-    getExpensesByCategory, 
-    categories, 
-    getCurrentMonthExpenses, 
-    formatAmount, 
-    formatDate, 
-    formatShortDate, 
-    currency, 
-    t, 
+  const {
+    income,
+    getTotalExpensesThisMonth,
+    getExpensesByCategory,
+    categories,
+    getCurrentMonthExpenses,
+    formatAmount,
+    formatDate,
+    formatShortDate,
+    currency,
+    t,
     getCategoryName,
     refreshExpenses
   } = useBudget();
@@ -29,7 +29,7 @@ const Dashboard = ({ openSettings }) => {
   useEffect(() => {
     refreshExpenses();
   }, []);
-  
+
   const totalExpenses = getTotalExpensesThisMonth();
   const remainingBudget = income - totalExpenses;
   const expensesByCategory = getExpensesByCategory();
@@ -44,6 +44,7 @@ const Dashboard = ({ openSettings }) => {
     }));
 
   const recentExpenses = currentMonthExpenses.slice(0, 5);
+
   const progressPercentage = Math.min((totalExpenses / income) * 100, 100);
 
   const handleLogout = async () => {
@@ -62,7 +63,7 @@ const Dashboard = ({ openSettings }) => {
           className="flex justify-between items-center mb-6 pt-4"
         >
           <div className="flex items-center gap-3">
-            <SafeIcon icon={FiCoffee} className="w-8 h-8 text-terracotta" />
+            <SafeIcon icon={FiCoffee} className="w-9 h-9 text-terracotta" />
             <div>
               <h1 className="text-2xl font-bold text-espresso dark:text-cream">Tazzio</h1>
               <p className="text-sm text-espresso/70 dark:text-cappuccino/70">
@@ -70,22 +71,23 @@ const Dashboard = ({ openSettings }) => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={openSettings}
-              className="p-2 rounded-full bg-cappuccino/20 dark:bg-espresso/50 hover:bg-cappuccino/30 dark:hover:bg-espresso/70 transition-colors"
+              className="p-3 rounded-full bg-cappuccino/20 dark:bg-espresso/50 hover:bg-cappuccino/30 dark:hover:bg-espresso/70 transition-colors"
             >
-              <SafeIcon icon={FiSettings} className="w-5 h-5 text-espresso dark:text-cream" />
+              <SafeIcon icon={FiSettings} className="w-6 h-6 text-espresso dark:text-cream" />
             </button>
             <button
               onClick={handleLogout}
-              className="p-2 rounded-full bg-terracotta/20 dark:bg-terracotta/30 hover:bg-terracotta/30 dark:hover:bg-terracotta/40 transition-colors"
+              className="p-3 rounded-full bg-terracotta/20 dark:bg-terracotta/30 hover:bg-terracotta/30 dark:hover:bg-terracotta/40 transition-colors"
             >
-              <SafeIcon icon={FiLogOut} className="w-5 h-5 text-terracotta" />
+              <SafeIcon icon={FiLogOut} className="w-6 h-6 text-terracotta" />
             </button>
           </div>
         </motion.div>
 
+        {/* Rest of the component remains unchanged */}
         {/* Budget Overview */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -111,7 +113,6 @@ const Dashboard = ({ openSettings }) => {
                 {remainingBudget.toFixed(2)} {currency}
               </span>
             </div>
-
             {/* Progress bar */}
             <div className="mt-4">
               <div className="flex justify-between text-sm text-espresso/70 dark:text-cappuccino/70 mb-2">

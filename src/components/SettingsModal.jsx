@@ -73,7 +73,7 @@ const ProfileSection = ({ t }) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <SafeIcon icon={FiUser} className="w-5 h-5 text-terracotta" />
+        <SafeIcon icon={FiUser} className="w-6 h-6 text-terracotta" />
         <h3 className="text-lg font-medium text-espresso dark:text-cream">
           Profil
         </h3>
@@ -102,9 +102,9 @@ const ProfileSection = ({ t }) => {
           <h4 className="font-medium text-espresso dark:text-cream">Adresse email</h4>
           <button
             onClick={() => setIsEditingEmail(!isEditingEmail)}
-            className="text-terracotta hover:bg-terracotta/10 p-2 rounded-lg transition-colors"
+            className="text-terracotta hover:bg-terracotta/10 p-3 rounded-lg transition-colors"
           >
-            <SafeIcon icon={isEditingEmail ? FiX : FiMail} className="w-4 h-4" />
+            <SafeIcon icon={isEditingEmail ? FiX : FiMail} className="w-5 h-5" />
           </button>
         </div>
 
@@ -126,7 +126,7 @@ const ProfileSection = ({ t }) => {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="flex-1 px-4 py-2 bg-terracotta text-white rounded-lg hover:bg-terracotta/90 transition-colors"
+                className="flex-1 px-4 py-3 bg-terracotta text-white rounded-lg hover:bg-terracotta/90 transition-colors"
               >
                 Mettre à jour
               </button>
@@ -136,7 +136,7 @@ const ProfileSection = ({ t }) => {
                   setIsEditingEmail(false);
                   setEmail(user?.email || '');
                 }}
-                className="flex-1 px-4 py-2 border border-cappuccino/30 text-espresso dark:text-cream rounded-lg hover:bg-cappuccino/10 transition-colors"
+                className="flex-1 px-4 py-3 border border-cappuccino/30 text-espresso dark:text-cream rounded-lg hover:bg-cappuccino/10 transition-colors"
               >
                 Annuler
               </button>
@@ -156,9 +156,9 @@ const ProfileSection = ({ t }) => {
           <h4 className="font-medium text-espresso dark:text-cream">Mot de passe</h4>
           <button
             onClick={() => setIsEditingPassword(!isEditingPassword)}
-            className="text-terracotta hover:bg-terracotta/10 p-2 rounded-lg transition-colors"
+            className="text-terracotta hover:bg-terracotta/10 p-3 rounded-lg transition-colors"
           >
-            <SafeIcon icon={isEditingPassword ? FiX : FiLock} className="w-4 h-4" />
+            <SafeIcon icon={isEditingPassword ? FiX : FiLock} className="w-5 h-5" />
           </button>
         </div>
 
@@ -183,7 +183,7 @@ const ProfileSection = ({ t }) => {
               >
                 <SafeIcon
                   icon={showPassword ? FiEyeOff : FiEye}
-                  className="text-espresso/40 dark:text-cappuccino/40 hover:text-espresso/70 dark:hover:text-cappuccino/70"
+                  className="w-5 h-5 text-espresso/40 dark:text-cappuccino/40 hover:text-espresso/70 dark:hover:text-cappuccino/70"
                 />
               </button>
             </div>
@@ -219,7 +219,7 @@ const ProfileSection = ({ t }) => {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="flex-1 px-4 py-2 bg-terracotta text-white rounded-lg hover:bg-terracotta/90 transition-colors"
+                className="flex-1 px-4 py-3 bg-terracotta text-white rounded-lg hover:bg-terracotta/90 transition-colors"
               >
                 Changer le mot de passe
               </button>
@@ -231,7 +231,7 @@ const ProfileSection = ({ t }) => {
                   setNewPassword('');
                   setConfirmPassword('');
                 }}
-                className="flex-1 px-4 py-2 border border-cappuccino/30 text-espresso dark:text-cream rounded-lg hover:bg-cappuccino/10 transition-colors"
+                className="flex-1 px-4 py-3 border border-cappuccino/30 text-espresso dark:text-cream rounded-lg hover:bg-cappuccino/10 transition-colors"
               >
                 Annuler
               </button>
@@ -334,16 +334,16 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
             {/* En-tête */}
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
-                <SafeIcon icon={FiSettings} className="w-6 h-6 text-terracotta" />
+                <SafeIcon icon={FiSettings} className="w-7 h-7 text-terracotta" />
                 <h2 className="text-xl font-semibold text-espresso dark:text-cream">
                   {t('settings')}
                 </h2>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-cappuccino/10 rounded-full transition-colors"
+                className="p-3 hover:bg-cappuccino/10 rounded-full transition-colors"
               >
-                <SafeIcon icon={FiX} className="w-5 h-5 text-espresso dark:text-cream" />
+                <SafeIcon icon={FiX} className="w-6 h-6 text-espresso dark:text-cream" />
               </button>
             </div>
 
@@ -355,7 +355,7 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
               {/* Section Thème */}
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <SafeIcon icon={isDarkMode ? FiMoon : FiSun} className="w-5 h-5 text-terracotta" />
+                  <SafeIcon icon={isDarkMode ? FiMoon : FiSun} className="w-6 h-6 text-terracotta" />
                   <h3 className="text-lg font-medium text-espresso dark:text-cream">
                     {t('theme')}
                   </h3>
@@ -363,27 +363,27 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => toggleTheme(false)}
-                    className={`p-3 rounded-xl border transition-all ${
+                    className={`p-4 rounded-xl border transition-all ${
                       !isDarkMode
                         ? 'border-terracotta bg-terracotta/10 text-terracotta'
                         : 'border-cappuccino/30 dark:border-cappuccino/20 text-espresso dark:text-cream hover:bg-cappuccino/10'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <SafeIcon icon={FiSun} className="w-4 h-4" />
+                    <div className="flex items-center gap-2 justify-center">
+                      <SafeIcon icon={FiSun} className="w-5 h-5" />
                       <span className="text-sm">{t('lightMode')}</span>
                     </div>
                   </button>
                   <button
                     onClick={() => toggleTheme(true)}
-                    className={`p-3 rounded-xl border transition-all ${
+                    className={`p-4 rounded-xl border transition-all ${
                       isDarkMode
                         ? 'border-terracotta bg-terracotta/10 text-terracotta'
                         : 'border-cappuccino/30 text-espresso hover:bg-cappuccino/10'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <SafeIcon icon={FiMoon} className="w-4 h-4" />
+                    <div className="flex items-center gap-2 justify-center">
+                      <SafeIcon icon={FiMoon} className="w-5 h-5" />
                       <span className="text-sm">{t('darkMode')}</span>
                     </div>
                   </button>
@@ -398,7 +398,7 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full px-4 py-3 border border-cappuccino/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
+                  className="w-full px-4 py-4 border border-cappuccino/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream text-base"
                 >
                   {currencies.map(curr => (
                     <option key={curr.code} value={curr.symbol}>
@@ -418,14 +418,14 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
                     <button
                       key={lang.code}
                       onClick={() => setLanguage(lang.code)}
-                      className={`p-3 rounded-xl border transition-all ${
+                      className={`p-4 rounded-xl border transition-all ${
                         language === lang.code
                           ? 'border-terracotta bg-terracotta/10 text-terracotta'
                           : 'border-cappuccino/30 dark:border-cappuccino/20 text-espresso dark:text-cream hover:bg-cappuccino/10'
                       }`}
                     >
                       <div className="text-center">
-                        <div className="text-xl mb-1">{lang.flag}</div>
+                        <div className="text-2xl mb-1">{lang.flag}</div>
                         <div className="text-xs">{lang.name}</div>
                       </div>
                     </button>
@@ -446,42 +446,42 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
                     value={newBuyerName}
                     onChange={(e) => setNewBuyerName(e.target.value)}
                     placeholder={t('newBuyer')}
-                    className="flex-1 px-3 py-2 border border-cappuccino/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
+                    className="flex-1 px-4 py-3 border border-cappuccino/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-terracotta text-white rounded-lg hover:bg-terracotta/90 transition-colors"
+                    className="px-4 py-3 bg-terracotta text-white rounded-lg hover:bg-terracotta/90 transition-colors"
                   >
-                    <SafeIcon icon={FiPlus} className="w-4 h-4" />
+                    <SafeIcon icon={FiPlus} className="w-5 h-5" />
                   </button>
                 </form>
 
                 {/* Liste des acheteurs */}
                 <div className="space-y-2">
                   {buyers.map(buyer => (
-                    <div key={buyer.id} className="flex items-center gap-2 p-3 bg-cappuccino/10 dark:bg-espresso/20 rounded-lg">
+                    <div key={buyer.id} className="flex items-center gap-2 p-4 bg-cappuccino/10 dark:bg-espresso/20 rounded-lg">
                       {editingBuyer === buyer.id ? (
                         <>
                           <input
                             type="text"
                             value={editingBuyerName}
                             onChange={(e) => setEditingBuyerName(e.target.value)}
-                            className="flex-1 px-2 py-1 border border-cappuccino/30 rounded focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
+                            className="flex-1 px-3 py-2 border border-cappuccino/30 rounded focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:border-cappuccino/20 dark:text-cream"
                           />
                           <button
                             onClick={() => handleUpdateBuyer(buyer.id)}
-                            className="p-1 text-sage hover:bg-sage/10 rounded"
+                            className="p-2 text-sage hover:bg-sage/10 rounded"
                           >
-                            <SafeIcon icon={FiSave} className="w-4 h-4" />
+                            <SafeIcon icon={FiSave} className="w-5 h-5" />
                           </button>
                           <button
                             onClick={() => {
                               setEditingBuyer(null);
                               setEditingBuyerName('');
                             }}
-                            className="p-1 text-terracotta hover:bg-terracotta/10 rounded"
+                            className="p-2 text-terracotta hover:bg-terracotta/10 rounded"
                           >
-                            <SafeIcon icon={FiX} className="w-4 h-4" />
+                            <SafeIcon icon={FiX} className="w-5 h-5" />
                           </button>
                         </>
                       ) : (
@@ -492,15 +492,15 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
                               setEditingBuyer(buyer.id);
                               setEditingBuyerName(buyer.name);
                             }}
-                            className="p-1 text-terracotta hover:bg-terracotta/10 rounded"
+                            className="p-2 text-terracotta hover:bg-terracotta/10 rounded"
                           >
-                            <SafeIcon icon={FiSettings} className="w-4 h-4" />
+                            <SafeIcon icon={FiSettings} className="w-5 h-5" />
                           </button>
                           <button
                             onClick={() => handleDeleteBuyer(buyer.id)}
-                            className="p-1 text-red-500 hover:bg-red-500/10 rounded"
+                            className="p-2 text-red-500 hover:bg-red-500/10 rounded"
                           >
-                            <SafeIcon icon={FiTrash2} className="w-4 h-4" />
+                            <SafeIcon icon={FiTrash2} className="w-5 h-5" />
                           </button>
                         </>
                       )}
@@ -513,9 +513,9 @@ const SettingsModal = ({ isOpen, onClose, toggleTheme, isDarkMode }) => {
               <div className="pt-4 border-t border-cappuccino/30 dark:border-cappuccino/20">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors"
                 >
-                  <SafeIcon icon={FiLogOut} className="w-5 h-5" />
+                  <SafeIcon icon={FiLogOut} className="w-6 h-6" />
                   {t('logout')}
                 </button>
               </div>

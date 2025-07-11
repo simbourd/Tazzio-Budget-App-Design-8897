@@ -48,7 +48,7 @@
   --text-primary: #5D4037;
   --text-secondary: #8B4513;
   --card-bg: #FFFFFF;
-  --card-border: rgba(210, 180, 140, 0.3);
+  --card-border: rgba(210,180,140,0.3);
   --highlight: #E07A5F;
   --success: #9CAF88;
   --input-bg: #FFFFFF;
@@ -59,8 +59,8 @@
   --bg-primary: #3C2414;
   --text-primary: #F7F3E9;
   --text-secondary: #E6D5C3;
-  --card-bg: rgba(93, 64, 55, 0.3);
-  --card-border: rgba(139, 69, 19, 0.5);
+  --card-bg: rgba(93,64,55,0.3);
+  --card-border: rgba(139,69,19,0.5);
   --highlight: #E07A5F;
   --success: #9CAF88;
   --input-bg: #5D4037;
@@ -72,10 +72,8 @@
 }
 
 /* Input focus styles */
-input:focus,
-textarea:focus,
-select:focus {
-  box-shadow: 0 0 0 3px rgba(224, 122, 95, 0.1);
+input:focus, textarea:focus, select:focus {
+  box-shadow: 0 0 0 3px rgba(224,122,95,0.1);
 }
 
 /* Button hover effects */
@@ -90,7 +88,7 @@ button:active {
 /* Card hover effects */
 .shadow-soft:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 15px 30px -5px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 25px -5px rgba(0,0,0,0.1), 0 15px 30px -5px rgba(0,0,0,0.08);
 }
 
 /* Animation classes */
@@ -124,4 +122,14 @@ button:active {
     max-width: 100%;
     padding: 0 1rem;
   }
+}
+
+/* Fix for bottom navigation on mobile */
+.fixed.bottom-0 {
+  z-index: 40;
+}
+
+/* Ensure content doesn't go behind fixed navigation */
+.pb-24 {
+  padding-bottom: 6rem;
 }

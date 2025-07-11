@@ -339,7 +339,6 @@ export const BudgetProvider = ({ children }) => {
         console.error('Error saving settings:', error);
         return false;
       }
-
       console.log("Settings saved successfully");
       return true;
     } catch (error) {
@@ -463,7 +462,10 @@ export const BudgetProvider = ({ children }) => {
 
   // Ajouter un acheteur
   const addBuyer = async (name) => {
-    const newBuyer = { id: Math.random().toString(36).substr(2, 9), name };
+    const newBuyer = {
+      id: Math.random().toString(36).substr(2, 9),
+      name
+    };
     const newBuyers = [...buyers, newBuyer];
     setBuyers(newBuyers);
     return await saveUserSettings({ buyers: newBuyers });
@@ -478,7 +480,7 @@ export const BudgetProvider = ({ children }) => {
 
   // Mettre à jour un acheteur
   const updateBuyer = async (id, name) => {
-    const newBuyers = buyers.map(buyer => 
+    const newBuyers = buyers.map(buyer =>
       buyer.id === id ? { ...buyer, name } : buyer
     );
     setBuyers(newBuyers);
@@ -506,6 +508,13 @@ export const BudgetProvider = ({ children }) => {
       }
       return goal;
     });
+    setSavings(newSavings);
+    return await saveUserSettings({ savings: newSavings });
+  };
+
+  // Supprimer un objectif d'épargne
+  const removeSavingsGoal = async (goalId) => {
+    const newSavings = savings.filter(goal => goal.id !== goalId);
     setSavings(newSavings);
     return await saveUserSettings({ savings: newSavings });
   };
@@ -579,41 +588,41 @@ export const BudgetProvider = ({ children }) => {
   };
 
   return (
-    <BudgetContext.Provider
-      value={{
-        language,
-        setLanguage: updateLanguage,
-        currency,
-        setCurrency: updateCurrency,
-        income,
-        setIncome: updateIncome,
-        categories,
-        setCategories,
-        buyers,
-        setBuyers,
-        expenses,
-        addExpense,
-        deleteExpense,
-        refreshExpenses,
-        budgets,
-        updateBudget,
-        savings,
-        addSavingsGoal,
-        updateSavingsGoal,
-        getCurrentMonthExpenses,
-        getTotalExpensesThisMonth,
-        getExpensesByCategory,
-        getExpensesByBuyer,
-        formatAmount,
-        formatDate,
-        formatShortDate,
-        getCategoryName,
-        t,
-        addBuyer,
-        removeBuyer,
-        updateBuyer,
-        loading
-      }}
+    <BudgetContext.Provider value={{
+      language,
+      setLanguage: updateLanguage,
+      currency,
+      setCurrency: updateCurrency,
+      income,
+      setIncome: updateIncome,
+      categories,
+      setCategories,
+      buyers,
+      setBuyers,
+      expenses,
+      addExpense,
+      deleteExpense,
+      refreshExpenses,
+      budgets,
+      updateBudget,
+      savings,
+      addSavingsGoal,
+      updateSavingsGoal,
+      removeSavingsGoal,
+      getCurrentMonthExpenses,
+      getTotalExpensesThisMonth,
+      getExpensesByCategory,
+      getExpensesByBuyer,
+      formatAmount,
+      formatDate,
+      formatShortDate,
+      getCategoryName,
+      t,
+      addBuyer,
+      removeBuyer,
+      updateBuyer,
+      loading
+    }}
     >
       {children}
     </BudgetContext.Provider>

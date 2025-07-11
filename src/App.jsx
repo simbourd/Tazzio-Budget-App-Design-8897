@@ -17,6 +17,7 @@ function App() {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [expenseToEdit, setExpenseToEdit] = useState(null);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('tazzio-theme');
@@ -41,38 +42,48 @@ function App() {
     }
   };
 
+  const handleEditExpense = (expense) => {
+    setExpenseToEdit(expense);
+    setIsExpenseModalOpen(true);
+  };
+
+  const handleCloseExpenseModal = () => {
+    setIsExpenseModalOpen(false);
+    setExpenseToEdit(null);
+  };
+
   return (
     <Router>
       <AuthWrapper>
-        <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-coffee-dark' : 'bg-cream'}`}>
-          <motion.div
+        <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-coffee-dark' : 'bg-cream'} pb-24`}>
+          <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="pb-20"
           >
             <Routes>
               <Route path="/" element={<Dashboard openSettings={() => setIsSettingsModalOpen(true)} />} />
-              <Route path="/expenses" element={<Expenses />} />
+              <Route path="/expenses" element={<Expenses onEditExpense={handleEditExpense} />} />
               <Route path="/budget" element={<Budget />} />
               <Route path="/savings" element={<Savings />} />
               <Route path="/reports" element={<Reports />} />
             </Routes>
           </motion.div>
-
           <Navigation />
-          <FloatingAddButton onClick={() => setIsExpenseModalOpen(true)} />
-
-          <AddExpenseModal
-            isOpen={isExpenseModalOpen}
-            onClose={() => setIsExpenseModalOpen(false)}
+          <FloatingAddButton onClick={() => {
+            setExpenseToEdit(null);
+            setIsExpenseModalOpen(true);
+          }} />
+          <AddExpenseModal 
+            isOpen={isExpenseModalOpen} 
+            onClose={handleCloseExpenseModal} 
+            expenseToEdit={expenseToEdit}
           />
-
-          <SettingsModal
-            isOpen={isSettingsModalOpen}
-            onClose={() => setIsSettingsModalOpen(false)}
-            toggleTheme={toggleTheme}
-            isDarkMode={isDarkMode}
+          <SettingsModal 
+            isOpen={isSettingsModalOpen} 
+            onClose={() => setIsSettingsModalOpen(false)} 
+            toggleTheme={toggleTheme} 
+            isDarkMode={isDarkMode} 
           />
         </div>
       </AuthWrapper>

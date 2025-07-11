@@ -23,9 +23,9 @@ const Navigation = () => {
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed bottom-0 left-0 right-0 bg-white dark:bg-coffee-dark border-t border-cappuccino/20 dark:border-espresso/30 z-40"
+      className="fixed bottom-0 left-0 right-0 bg-white dark:bg-coffee-dark border-t border-cappuccino/20 dark:border-espresso/30 z-50"
     >
-      <div className="flex justify-around items-center py-2 px-4">
+      <div className="flex justify-around items-center py-3 px-4">
         {navItems.map((item) => (
           <NavLink
             key={item.path}
@@ -43,11 +43,11 @@ const Navigation = () => {
                 <motion.div
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`p-2 rounded-lg transition-colors ${
+                  className={`p-3 rounded-lg transition-colors ${
                     isActive ? 'bg-terracotta/20' : 'hover:bg-terracotta/10'
                   }`}
                 >
-                  <SafeIcon icon={item.icon} className="w-5 h-5" />
+                  <SafeIcon icon={item.icon} className="w-6 h-6" />
                 </motion.div>
                 <span className="text-xs mt-1 font-medium">{item.label}</span>
               </>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBudget } from '../context/BudgetContext';
 import SafeIcon from '../common/SafeIcon';
@@ -6,7 +6,7 @@ import * as FiIcons from 'react-icons/fi';
 
 const { FiX, FiDollarSign, FiCalendar, FiUser, FiTag, FiFileText } = FiIcons;
 
-const AddExpenseModal = ({ isOpen, onClose }) => {
+const AddExpenseModal = ({ isOpen, onClose, expenseToEdit = null }) => {
   const { addExpense, categories, buyers, currency, t, refreshExpenses } = useBudget();
   const [formData, setFormData] = useState({
     amount: '',
@@ -18,12 +18,31 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Si nous recevons une dépense à modifier, initialiser le formulaire avec ses valeurs
+  useEffect(() => {
+    if (expenseToEdit) {
+      setFormData({
+        amount: expenseToEdit.amount.toString(),
+        category: expenseToEdit.category,
+        description: expenseToEdit.description || '',
+        buyerId: expenseToEdit.buyer_id,
+        date: expenseToEdit.date
+      });
+    } else {
+      // Réinitialiser le formulaire si nous ne modifions pas une dépense existante
+      setFormData({
+        amount: '',
+        category: '',
+        description: '',
+        buyerId: '1',
+        date: new Date().toISOString().split('T')[0]
+      });
+    }
+  }, [expenseToEdit, isOpen]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -83,11 +102,11 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white dark:bg-coffee-dark rounded-3xl p-6 w-full max-w-md shadow-soft"
+            className="bg-white dark:bg-coffee-dark rounded-3xl p-6 w-full max-w-md shadow-soft max-h-[80vh] overflow-y-auto"
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-espresso dark:text-cream">
-                {t('newExpense')}
+                {expenseToEdit ? 'Modifier la dépense' : t('newExpense')}
               </h2>
               <button
                 onClick={onClose}
@@ -226,7 +245,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 ) : (
-                  t('add')
+                  expenseToEdit ? 'Modifier' : t('add')
                 )}
               </button>
             </form>
