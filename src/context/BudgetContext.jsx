@@ -55,7 +55,28 @@ const translations = {
     confirmDeleteBuyer: "Êtes-vous sûr de vouloir supprimer cet acheteur ?",
     newBuyer: "Nouvel acheteur",
     addBuyer: "Ajouter",
-    logout: "Déconnexion"
+    logout: "Déconnexion",
+    // Login page translations
+    login: "Se connecter",
+    signup: "S'inscrire",
+    email: "Email",
+    password: "Mot de passe",
+    confirmPassword: "Confirmer le mot de passe",
+    fullName: "Nom complet",
+    forgotPassword: "Mot de passe oublié ?",
+    emailPlaceholder: "email@exemple.com",
+    johnDoe: "Jean Dupont",
+    emailRequired: "Email requis",
+    invalidEmail: "Email invalide",
+    passwordRequired: "Mot de passe requis",
+    passwordTooShort: "Mot de passe trop court (min. 6 caractères)",
+    fullNameRequired: "Nom complet requis",
+    passwordsDoNotMatch: "Les mots de passe ne correspondent pas",
+    accountCreated: "Compte créé avec succès ! Vous pouvez maintenant vous connecter.",
+    enterEmail: "Veuillez entrer votre email",
+    resetEmailSent: "Email de réinitialisation envoyé !",
+    budgetManagerSubtitle: "Votre gestionnaire de budget personnel",
+    copyright: "© 2025 Tazzio Budget. Gérez votre budget avec style."
   },
   en: {
     home: "Home",
@@ -94,7 +115,28 @@ const translations = {
     confirmDeleteBuyer: "Are you sure you want to delete this buyer?",
     newBuyer: "New buyer",
     addBuyer: "Add",
-    logout: "Logout"
+    logout: "Logout",
+    // Login page translations
+    login: "Log in",
+    signup: "Sign up",
+    email: "Email",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    fullName: "Full Name",
+    forgotPassword: "Forgot password?",
+    emailPlaceholder: "email@example.com",
+    johnDoe: "John Doe",
+    emailRequired: "Email required",
+    invalidEmail: "Invalid email",
+    passwordRequired: "Password required",
+    passwordTooShort: "Password too short (min. 6 characters)",
+    fullNameRequired: "Full name required",
+    passwordsDoNotMatch: "Passwords do not match",
+    accountCreated: "Account successfully created! You can now log in.",
+    enterEmail: "Please enter your email",
+    resetEmailSent: "Password reset email sent!",
+    budgetManagerSubtitle: "Your personal budget manager",
+    copyright: "© 2025 Tazzio Budget. Manage your budget with style."
   },
   es: {
     home: "Inicio",
@@ -133,11 +175,36 @@ const translations = {
     confirmDeleteBuyer: "¿Está seguro que desea eliminar este comprador?",
     newBuyer: "Nuevo comprador",
     addBuyer: "Añadir",
-    logout: "Cerrar sesión"
+    logout: "Cerrar sesión",
+    // Login page translations
+    login: "Iniciar sesión",
+    signup: "Registrarse",
+    email: "Correo electrónico",
+    password: "Contraseña",
+    confirmPassword: "Confirmar contraseña",
+    fullName: "Nombre completo",
+    forgotPassword: "¿Olvidó su contraseña?",
+    emailPlaceholder: "correo@ejemplo.com",
+    johnDoe: "Juan Pérez",
+    emailRequired: "Correo electrónico requerido",
+    invalidEmail: "Correo electrónico inválido",
+    passwordRequired: "Contraseña requerida",
+    passwordTooShort: "Contraseña demasiado corta (mín. 6 caracteres)",
+    fullNameRequired: "Nombre completo requerido",
+    passwordsDoNotMatch: "Las contraseñas no coinciden",
+    accountCreated: "¡Cuenta creada con éxito! Ahora puede iniciar sesión.",
+    enterEmail: "Por favor, introduzca su correo electrónico",
+    resetEmailSent: "¡Correo de restablecimiento enviado!",
+    budgetManagerSubtitle: "Su gestor de presupuesto personal",
+    copyright: "© 2025 Tazzio Budget. Gestione su presupuesto con estilo."
   }
 };
 
-const dateLocales = { fr, en: enUS, es };
+const dateLocales = {
+  fr,
+  en: enUS,
+  es
+};
 
 // Default data
 const defaultCategories = [
@@ -182,21 +249,20 @@ export const BudgetProvider = ({ children }) => {
   const loadUserData = async () => {
     try {
       setLoading(true);
-      
+
       // Vérifier si les paramètres utilisateur existent déjà
       const { data: settings, error: settingsError } = await supabase
         .from('user_settings_7k8m3n')
         .select('*')
         .eq('user_id', user.id)
         .single();
-        
+
       if (settingsError && settingsError.code !== 'PGRST116') {
         console.error('Error loading settings:', settingsError);
-        
         // Si la table n'existe pas, initialiser avec les valeurs par défaut
         await initializeUserData();
       }
-      
+
       // Si les paramètres existent, les appliquer
       if (settings) {
         setLanguage(settings.language || 'fr');
@@ -210,7 +276,7 @@ export const BudgetProvider = ({ children }) => {
         // Sinon, initialiser avec les valeurs par défaut
         await initializeUserData();
       }
-      
+
       // Charger les dépenses
       await refreshExpenses();
     } catch (error) {
@@ -223,7 +289,7 @@ export const BudgetProvider = ({ children }) => {
   // Initialiser les données utilisateur
   const initializeUserData = async () => {
     if (!user) return;
-    
+
     try {
       // Créer les paramètres par défaut
       const defaultSettings = {
@@ -240,7 +306,7 @@ export const BudgetProvider = ({ children }) => {
       const { error: insertError } = await supabase
         .from('user_settings_7k8m3n')
         .insert([defaultSettings]);
-        
+
       if (insertError) {
         console.error('Error creating default settings:', insertError);
       } else {
@@ -261,23 +327,19 @@ export const BudgetProvider = ({ children }) => {
   // Sauvegarder les paramètres utilisateur
   const saveUserSettings = async (updates) => {
     if (!user) return false;
-    
+
     try {
       console.log("Saving user settings:", updates);
-      
       const { data, error } = await supabase
         .from('user_settings_7k8m3n')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('user_id', user.id);
-        
+
       if (error) {
         console.error('Error saving settings:', error);
         return false;
       }
-      
+
       console.log("Settings saved successfully");
       return true;
     } catch (error) {
@@ -289,7 +351,7 @@ export const BudgetProvider = ({ children }) => {
   // Rafraîchir les dépenses
   const refreshExpenses = async () => {
     if (!user) return;
-    
+
     try {
       console.log('Fetching expenses for user:', user.id);
       const { data, error } = await supabase
@@ -297,12 +359,12 @@ export const BudgetProvider = ({ children }) => {
         .select('*')
         .eq('user_id', user.id)
         .order('date', { ascending: false });
-        
+
       if (error) {
         console.error('Error fetching expenses:', error);
         return;
       }
-      
+
       console.log('Fetched expenses:', data);
       if (data) {
         setExpenses(data);
@@ -315,7 +377,7 @@ export const BudgetProvider = ({ children }) => {
   // Ajouter une dépense
   const addExpense = async (expense) => {
     if (!user) return false;
-    
+
     try {
       const newExpense = {
         user_id: user.id,
@@ -327,7 +389,6 @@ export const BudgetProvider = ({ children }) => {
       };
 
       console.log('Adding expense:', newExpense);
-
       const { data, error } = await supabase
         .from('user_expenses_7k8m3n')
         .insert([newExpense])
@@ -351,7 +412,7 @@ export const BudgetProvider = ({ children }) => {
   // Supprimer une dépense
   const deleteExpense = async (id) => {
     if (!user) return false;
-    
+
     try {
       const { error } = await supabase
         .from('user_expenses_7k8m3n')
@@ -454,7 +515,7 @@ export const BudgetProvider = ({ children }) => {
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
     const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-    
+
     return expenses
       .filter(expense => {
         return expense.date >= firstDayOfMonth && expense.date <= lastDayOfMonth;

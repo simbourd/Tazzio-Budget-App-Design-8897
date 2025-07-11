@@ -18,6 +18,7 @@ const LoginPage = () => {
     confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
+
   const { signIn, signUp, resetPassword } = useAuth();
   const { language, setLanguage, t } = useBudget();
 
@@ -28,10 +29,7 @@ const LoginPage = () => {
   ];
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     // Clear error when user starts typing
     if (errors[e.target.name]) {
       setErrors(prev => ({ ...prev, [e.target.name]: '' }));
@@ -41,23 +39,26 @@ const LoginPage = () => {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.email) {
-      newErrors.email = 'Email requis';
+      newErrors.email = t('emailRequired') || 'Email requis';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email invalide';
+      newErrors.email = t('invalidEmail') || 'Email invalide';
     }
+
     if (!formData.password) {
-      newErrors.password = 'Mot de passe requis';
+      newErrors.password = t('passwordRequired') || 'Mot de passe requis';
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Mot de passe trop court (min. 6 caractères)';
+      newErrors.password = t('passwordTooShort') || 'Mot de passe trop court (min. 6 caractères)';
     }
+
     if (!isLogin) {
       if (!formData.fullName) {
-        newErrors.fullName = 'Nom complet requis';
+        newErrors.fullName = t('fullNameRequired') || 'Nom complet requis';
       }
       if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+        newErrors.confirmPassword = t('passwordsDoNotMatch') || 'Les mots de passe ne correspondent pas';
       }
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -65,6 +66,7 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
+    
     setLoading(true);
     try {
       if (isLogin) {
@@ -74,10 +76,11 @@ const LoginPage = () => {
         console.log("Attempting signup with:", formData.email, formData.password);
         const { error } = await signUp(formData.email, formData.password, formData.fullName);
         if (error) throw error;
+        
         // On successful signup
-        alert('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
+        alert(t('accountCreated') || 'Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
         setIsLogin(true);
-        setFormData({ ...formData, password: '', confirmPassword: '' });
+        setFormData({...formData, password: '', confirmPassword: ''});
       }
     } catch (error) {
       console.error("Auth error:", error);
@@ -89,13 +92,14 @@ const LoginPage = () => {
 
   const handleForgotPassword = async () => {
     if (!formData.email) {
-      setErrors({ email: 'Veuillez entrer votre email' });
+      setErrors({ email: t('enterEmail') || 'Veuillez entrer votre email' });
       return;
     }
+    
     try {
       const { error } = await resetPassword(formData.email);
       if (error) throw error;
-      alert('Email de réinitialisation envoyé !');
+      alert(t('resetEmailSent') || 'Email de réinitialisation envoyé !');
     } catch (error) {
       setErrors({ submit: error.message });
     }
@@ -120,9 +124,9 @@ const LoginPage = () => {
             <h1 className="text-3xl font-bold text-espresso dark:text-cream">Tazzio</h1>
           </div>
           <p className="text-espresso/70 dark:text-cappuccino/70">
-            Votre gestionnaire de budget personnel
+            {t('budgetManagerSubtitle') || 'Votre gestionnaire de budget personnel'}
           </p>
-          
+
           {/* Language Selector */}
           <div className="mt-4 flex justify-center gap-2">
             {languages.map(lang => (
@@ -158,7 +162,7 @@ const LoginPage = () => {
                     : 'text-espresso/70 dark:text-cappuccino/70'
                 }`}
               >
-                Connexion
+                {t('login') || 'Connexion'}
               </button>
               <button
                 onClick={() => setIsLogin(false)}
@@ -168,7 +172,7 @@ const LoginPage = () => {
                     : 'text-espresso/70 dark:text-cappuccino/70'
                 }`}
               >
-                Inscription
+                {t('signup') || 'Inscription'}
               </button>
             </div>
           </div>
@@ -183,7 +187,7 @@ const LoginPage = () => {
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium text-espresso dark:text-cream mb-2">
-                  Nom complet
+                  {t('fullName') || 'Nom complet'}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -197,7 +201,7 @@ const LoginPage = () => {
                     className={`w-full pl-10 pr-4 py-3 border ${
                       errors.fullName ? 'border-red-500' : 'border-cappuccino/30 dark:border-cappuccino/20'
                     } rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:text-cream`}
-                    placeholder="John Doe"
+                    placeholder={t('johnDoe') || "John Doe"}
                   />
                 </div>
                 {errors.fullName && (
@@ -208,7 +212,7 @@ const LoginPage = () => {
 
             <div>
               <label className="block text-sm font-medium text-espresso dark:text-cream mb-2">
-                Email
+                {t('email') || 'Email'}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -222,7 +226,7 @@ const LoginPage = () => {
                   className={`w-full pl-10 pr-4 py-3 border ${
                     errors.email ? 'border-red-500' : 'border-cappuccino/30 dark:border-cappuccino/20'
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta/50 dark:bg-espresso dark:text-cream`}
-                  placeholder="email@exemple.com"
+                  placeholder={t('emailPlaceholder') || "email@exemple.com"}
                 />
               </div>
               {errors.email && (
@@ -233,7 +237,7 @@ const LoginPage = () => {
             <div>
               <div className="flex justify-between">
                 <label className="block text-sm font-medium text-espresso dark:text-cream mb-2">
-                  Mot de passe
+                  {t('password') || 'Mot de passe'}
                 </label>
                 {isLogin && (
                   <button
@@ -241,7 +245,7 @@ const LoginPage = () => {
                     onClick={handleForgotPassword}
                     className="text-sm text-terracotta hover:underline"
                   >
-                    Mot de passe oublié ?
+                    {t('forgotPassword') || 'Mot de passe oublié ?'}
                   </button>
                 )}
               </div>
@@ -278,7 +282,7 @@ const LoginPage = () => {
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium text-espresso dark:text-cream mb-2">
-                  Confirmer le mot de passe
+                  {t('confirmPassword') || 'Confirmer le mot de passe'}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -312,7 +316,7 @@ const LoginPage = () => {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
                 <>
-                  {isLogin ? 'Se connecter' : "S'inscrire"}
+                  {isLogin ? (t('login') || 'Se connecter') : (t('signup') || "S'inscrire")}
                   <SafeIcon icon={FiArrowRight} className="w-4 h-4" />
                 </>
               )}
@@ -327,7 +331,7 @@ const LoginPage = () => {
           transition={{ delay: 0.4 }}
           className="text-center mt-8 text-sm text-espresso/60 dark:text-cappuccino/60"
         >
-          <p>© 2025 Tazzio Budget. Gérez votre budget avec style.</p>
+          <p>{t('copyright') || '© 2025 Tazzio Budget. Gérez votre budget avec style.'}</p>
         </motion.div>
       </motion.div>
     </div>
